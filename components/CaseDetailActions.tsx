@@ -169,6 +169,28 @@ export default function CaseDetailActions({ caseData, onCaseUpdate, onDeleted }:
 
   return (
     <div className="space-y-8">
+      <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+        <h3 className="text-lg font-semibold text-slate-800">Case overview</h3>
+        <dl className="mt-3 space-y-2 text-sm text-slate-600">
+          <div className="flex justify-between gap-4">
+            <dt className="font-medium text-slate-700">Store</dt>
+            <dd>{caseData.storeName ?? caseData.store ?? "—"}</dd>
+          </div>
+          <div className="flex justify-between gap-4">
+            <dt className="font-medium text-slate-700">Product</dt>
+            <dd>{caseData.productName ?? caseData.product ?? "—"}</dd>
+          </div>
+          <div className="flex justify-between gap-4">
+            <dt className="font-medium text-slate-700">User email</dt>
+            <dd>{caseData.userEmail ?? "—"}</dd>
+          </div>
+          <div className="flex justify-between gap-4">
+            <dt className="font-medium text-slate-700">Description</dt>
+            <dd className="max-w-xs text-right">{caseData.description ?? "—"}</dd>
+          </div>
+        </dl>
+      </section>
+
       <section>
         <h3 className="text-lg font-semibold text-slate-800">Manual analysis</h3>
         <textarea
