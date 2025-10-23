@@ -58,13 +58,13 @@ export async function saveManualAnalysis(id: string, text: string, by: string) {
       manualAnalysis: { text, updatedAt: now },
       $push: {
         statusHistory: {
-          status: "inReview",
+          status: "IN_REVIEW",
           by,
           at: now,
           note: "Manual analysis updated"
         }
       },
-      status: "inReview"
+      status: "IN_REVIEW"
     },
     { new: true }
   ).lean();
@@ -83,7 +83,7 @@ export async function saveEmailDraft(
     {
       $push: {
         statusHistory: {
-          status: "inReview",
+          status: "IN_REVIEW",
           by,
           at: now,
           note: "Email draft updated"
@@ -126,13 +126,13 @@ export async function recordEmailSent(
       $push: {
         emails: email,
         statusHistory: {
-          status: "sent",
+          status: "IN_REVIEW",
           by,
           at: now,
           note: `Email sent to ${email.to}`
         }
       },
-      status: "sent"
+      status: "IN_REVIEW"
     },
     { new: true }
   ).lean();
@@ -194,10 +194,10 @@ export async function requestInfo(
   const doc = await CaseModel.findByIdAndUpdate(
     id,
     {
-      status: "needMoreInfo",
+      status: "NEED_INFO",
       $push: {
         statusHistory: {
-          status: "needMoreInfo",
+          status: "NEED_INFO",
           by,
           at: now,
           note: message
@@ -219,14 +219,14 @@ export async function approveCase(
   const doc = await CaseModel.findByIdAndUpdate(
     id,
     {
-      status: "approved",
+      status: "APPROVED",
       resolution: {
         code,
         addedAt: now
       },
       $push: {
         statusHistory: {
-          status: "approved",
+          status: "APPROVED",
           by,
           at: now,
           note: `Resolution code ${code}`
@@ -248,10 +248,10 @@ export async function rejectCase(
   const doc = await CaseModel.findByIdAndUpdate(
     id,
     {
-      status: "rejected",
+      status: "REJECTED",
       $push: {
         statusHistory: {
-          status: "rejected",
+          status: "REJECTED",
           by,
           at: now,
           note

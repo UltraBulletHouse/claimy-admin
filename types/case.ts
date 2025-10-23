@@ -1,11 +1,9 @@
 export type CaseStatus =
-  | "new"
-  | "inReview"
-  | "sent"
-  | "waitingReply"
-  | "needMoreInfo"
-  | "approved"
-  | "rejected";
+  | "PENDING"
+  | "IN_REVIEW"
+  | "NEED_INFO"
+  | "APPROVED"
+  | "REJECTED";
 
 export interface CaseEmail {
   subject: string;
