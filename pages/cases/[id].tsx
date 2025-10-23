@@ -1,5 +1,6 @@
 import { useRouter } from "next/router";
 import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import Layout from "../../components/Layout";
 import LoadingState from "../../components/LoadingState";
 import { useAdminSession } from "../../context/AdminSessionContext";
@@ -71,6 +72,12 @@ export default function CaseDetailPage() {
 
   return (
     <Layout title={pageTitle}>
+      <Link
+        href="/"
+        className="mb-4 inline-flex items-center text-sm font-medium text-indigo-600 hover:text-indigo-500"
+      >
+        ← Back to cases
+      </Link>
       <div className="grid gap-8 lg:grid-cols-[2fr,3fr]">
         <div className="space-y-6">
           <CaseDetailHeader caseData={caseData} />
