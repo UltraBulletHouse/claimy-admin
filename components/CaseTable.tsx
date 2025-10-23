@@ -38,11 +38,11 @@ export default function CaseTable({ cases, total, onPaginate, limit, skip }: Pro
             <tr key={caseItem._id} className="hover:bg-slate-50">
               <td className="px-4 py-4 text-sm font-medium text-indigo-600">
                 <Link href={`/cases/${caseItem._id}`} className="hover:underline">
-                  {caseItem.productName ?? "Untitled"}
+                  {caseItem.productName ?? caseItem.product ?? caseItem.description ?? "Untitled"}
                 </Link>
               </td>
               <td className="px-4 py-4 text-sm text-slate-600">
-                {caseItem.storeName ?? "—"}
+                {caseItem.storeName ?? caseItem.store ?? "—"}
               </td>
               <td className="px-4 py-4 text-sm text-slate-600">
                 {caseItem.userEmail ?? "—"}

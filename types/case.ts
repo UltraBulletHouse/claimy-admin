@@ -33,6 +33,9 @@ export interface CaseRecord {
   userEmail?: string;
   storeName?: string;
   productName?: string;
+  store?: string;
+  product?: string;
+  description?: string;
   createdAt: string;
   productImageUrl?: string;
   receiptImageUrl?: string;

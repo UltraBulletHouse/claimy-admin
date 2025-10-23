@@ -66,8 +66,11 @@ export default function CaseDetailPage() {
     );
   }
 
+  const pageTitle =
+    caseData.productName ?? caseData.product ?? caseData.description ?? "Case detail";
+
   return (
-    <Layout title={caseData.productName ?? "Case detail"}>
+    <Layout title={pageTitle}>
       <div className="grid gap-8 lg:grid-cols-[2fr,3fr]">
         <div className="space-y-6">
           <CaseDetailHeader caseData={caseData} />

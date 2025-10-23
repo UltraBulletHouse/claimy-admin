@@ -17,7 +17,9 @@ export default function CaseDetailActions({ caseData, onCaseUpdate, onDeleted }:
   const [emailDraft, setEmailDraft] = useState({
     subject: "",
     body: "",
-    to: caseData.storeName ? `${caseData.storeName} <store@example.com>` : ""
+    to: caseData.storeName || caseData.store
+      ? `${(caseData.storeName ?? caseData.store) ?? "Store"} <store@example.com>`
+      : ""
   });
   const [generatedPrompt, setGeneratedPrompt] = useState("");
   const [includeProduct, setIncludeProduct] = useState(true);
