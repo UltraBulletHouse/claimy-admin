@@ -1,5 +1,4 @@
 import { google } from "googleapis";
-import { encode as base64urlEncode } from "base64url";
 import type { CaseRecord } from "../types/case";
 
 const {
@@ -58,7 +57,7 @@ export async function sendGmailMessage(options: SendEmailOptions) {
   const res = await gmail.users.messages.send({
     userId: "me",
     requestBody: {
-      raw: base64urlEncode(message),
+      raw: base64UrlEncode(message),
       threadId: options.threadId
     }
   });
@@ -153,6 +152,14 @@ export function parseThreadMessages(thread: any): ParsedThreadMessage[] {
       bodyPlain: extractPlainText(message.payload)
     };
   });
+}
+
+function base64UrlEncode(input: string) {
+  return Buffer.from(input)
+    .toString("base64")
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/g, "");
 }
 
 function extractPlainText(payload: any): string {
