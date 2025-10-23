@@ -280,6 +280,19 @@ export async function deleteCase(
 }
 
 function mapCase(doc: any): CaseRecord {
+  const imagesArray: string[] | undefined = Array.isArray(doc.images) ? doc.images : undefined;
+  const productImageFromArray =
+    imagesArray?.find((url) => typeof url === "string" && url.toLowerCase().includes("product")) ??
+    imagesArray?.[0];
+  const receiptImageFromArray =
+    imagesArray?.find((url) => typeof url === "string" && url.toLowerCase().includes("receipt")) ??
+    (imagesArray && imagesArray.length > 1 ? imagesArray[1] : undefined);
+
+  const productImageUrl =
+    doc.imageUrls?.product ?? doc.productImageUrl ?? productImageFromArray ?? undefined;
+  const receiptImageUrl =
+    doc.imageUrls?.receipt ?? doc.receiptImageUrl ?? receiptImageFromArray ?? undefined;
+
   return {
     _id: doc._id.toString(),
     userId: doc.userId ?? undefined,
@@ -288,7 +301,16 @@ function mapCase(doc: any): CaseRecord {
     storeName: doc.storeName ?? undefined,
     productName: doc.productName ?? undefined,
     createdAt: doc.createdAt?.toISOString() ?? new Date().toISOString(),
-    imageUrls: doc.imageUrls ?? undefined,
+    productImageUrl,
+    receiptImageUrl,
+    images: imagesArray,
+    imageUrls:
+      productImageUrl || receiptImageUrl
+        ? {
+            product: productImageUrl,
+            receipt: receiptImageUrl
+          }
+        : undefined,
     cloudinaryPublicIds: doc.cloudinaryPublicIds ?? undefined,
     manualAnalysis: doc.manualAnalysis
       ? {

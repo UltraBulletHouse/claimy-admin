@@ -31,16 +31,23 @@ export default withAdminAuth(async function handler(
   }
 
   const attachments = [];
-  if (attachProduct && caseRecord.imageUrls?.product) {
-    const asset = await fetchAssetBuffer(caseRecord.imageUrls.product);
+  const productImageUrl =
+    caseRecord.imageUrls?.product ?? caseRecord.productImageUrl ?? caseRecord.images?.[0];
+  const receiptImageUrl =
+    caseRecord.imageUrls?.receipt ??
+    caseRecord.receiptImageUrl ??
+    (caseRecord.images && caseRecord.images.length > 1 ? caseRecord.images[1] : undefined);
+
+  if (attachProduct && productImageUrl) {
+    const asset = await fetchAssetBuffer(productImageUrl);
     attachments.push({
       filename: "product.jpg",
       mimeType: asset.contentType,
       data: asset.data
     });
   }
-  if (attachReceipt && caseRecord.imageUrls?.receipt) {
-    const asset = await fetchAssetBuffer(caseRecord.imageUrls.receipt);
+  if (attachReceipt && receiptImageUrl) {
+    const asset = await fetchAssetBuffer(receiptImageUrl);
     attachments.push({
       filename: "receipt.jpg",
       mimeType: asset.contentType,
