@@ -115,6 +115,8 @@ export async function recordEmailSent(
     from: string;
     sentAt: Date;
     threadId?: string;
+    messageId?: string;
+    references?: string[];
   },
   by: string
 ) {
@@ -152,7 +154,10 @@ export async function upsertEmailsFromThread(
   const merged = mergeThreadEmails(existing.emails || [], emails);
   existing.emails = merged.map((email) => ({
     ...email,
-    sentAt: new Date(email.sentAt)
+    sentAt: new Date(email.sentAt),
+    // Keep any captured Gmail threading headers
+    messageId: (email as any).messageId,
+    references: (email as any).references,
   }));
   await existing.save();
   return mapCase(existing.toObject());

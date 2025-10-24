@@ -43,6 +43,8 @@ export interface SendEmailOptions {
   body: string;
   attachments?: GmailAttachment[];
   threadId?: string;
+  replyToMessageId?: string;
+  referencesMessageIds?: string[];
 }
 
 export async function sendGmailMessage(options: SendEmailOptions) {
@@ -55,7 +57,9 @@ export async function sendGmailMessage(options: SendEmailOptions) {
     to: options.to,
     subject: options.subject,
     body: options.body,
-    attachments: options.attachments
+    attachments: options.attachments,
+    replyToMessageId: options.replyToMessageId,
+    referencesMessageIds: options.referencesMessageIds,
   });
 
   const res = await gmail.users.messages.send({
@@ -75,17 +79,21 @@ function buildMimeMessage(params: {
   subject: string;
   body: string;
   attachments?: GmailAttachment[];
+  replyToMessageId?: string;
+  referencesMessageIds?: string[];
 }) {
   const boundary = "boundary_" + Date.now();
   const headers = [
     `From: ${params.from}`,
     `To: ${params.to}`,
     `Subject: ${params.subject}`,
+    params.replyToMessageId ? `In-Reply-To: ${params.replyToMessageId}` : undefined,
+    params.referencesMessageIds?.length ? `References: ${params.referencesMessageIds.join(' ')}` : undefined,
     "MIME-Version: 1.0",
     params.attachments?.length
       ? `Content-Type: multipart/mixed; boundary="${boundary}"`
       : `Content-Type: text/plain; charset="UTF-8"`
-  ];
+  ].filter(Boolean) as string[];
 
   if (!params.attachments?.length) {
     return `${headers.join("\r\n")}\r\n\r\n${params.body}`;
@@ -117,11 +125,14 @@ function buildMimeMessage(params: {
 export async function fetchThread(threadId: string) {
   const oauth2Client = getOAuth2Client();
   const gmail = google.gmail({ version: "v1", auth: oauth2Client });
-  const { data } = await gmail.users.threads.get({
-    userId: "me",
-    id: threadId,
-    format: "full"
-  });
+  const { data } = await gmail.users.threads.get({ userId: "me", id: threadId, format: "full" });
+  return data;
+}
+
+export async function fetchMessage(messageId: string) {
+  const oauth2Client = getOAuth2Client();
+  const gmail = google.gmail({ version: "v1", auth: oauth2Client });
+  const { data } = await gmail.users.messages.get({ userId: "me", id: messageId, format: "full" });
   return data;
 }
 
@@ -134,6 +145,8 @@ export interface ParsedThreadMessage {
   date?: string;
   snippet?: string;
   bodyPlain?: string;
+  messageId?: string;
+  references?: string[];
 }
 
 export function parseThreadMessages(thread: any): ParsedThreadMessage[] {
@@ -145,6 +158,10 @@ export function parseThreadMessages(thread: any): ParsedThreadMessage[] {
     const getHeader = (name: string) =>
       headers.find((h: any) => h.name.toLowerCase() === name.toLowerCase())?.value;
 
+    const refsHeader = getHeader("References") || getHeader("In-Reply-To");
+    const refs = refsHeader ? refsHeader.split(/\s+/).filter(Boolean) : undefined;
+    const msgId = getHeader("Message-ID") || getHeader("Message-Id");
+
     return {
       id: message.id,
       threadId: message.threadId,
@@ -153,7 +170,9 @@ export function parseThreadMessages(thread: any): ParsedThreadMessage[] {
       to: getHeader("To"),
       date: getHeader("Date"),
       snippet: message.snippet,
-      bodyPlain: extractPlainText(message.payload)
+      bodyPlain: extractPlainText(message.payload),
+      messageId: msgId,
+      references: refs,
     };
   });
 }
@@ -190,6 +209,8 @@ export function mapThreadToEmails(
     to: msg.to ?? caseRecord.userEmail ?? "",
     from: msg.from ?? "",
     sentAt: msg.date ? new Date(msg.date).toISOString() : new Date().toISOString(),
-    threadId: msg.threadId
+    threadId: msg.threadId,
+    messageId: msg.messageId,
+    references: msg.references,
   }));
 }

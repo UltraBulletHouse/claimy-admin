@@ -3,6 +3,7 @@ import toast from "react-hot-toast";
 import { useAdminApi } from "../hooks/useAdminApi";
 import ConfirmDialog from "./ConfirmDialog";
 import CaseThread from "./CaseThread";
+import Spinner from "./Spinner";
 import type { CaseRecord } from "../types/case";
 
 interface Props {
@@ -32,8 +33,20 @@ export default function CaseDetailActions({ caseData, onCaseUpdate, onDeleted }:
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [confirmReject, setConfirmReject] = useState(false);
 
+  const [savingAnalysis, setSavingAnalysis] = useState(false);
+  const [generatingPrompt, setGeneratingPrompt] = useState(false);
+  const [savingDraft, setSavingDraft] = useState(false);
+  const [sendingEmail, setSendingEmail] = useState(false);
+  const [viewingThread, setViewingThread] = useState(false);
+  const [replying, setReplying] = useState(false);
+  const [requestingInfo, setRequestingInfo] = useState(false);
+  const [approving, setApproving] = useState(false);
+  const [rejecting, setRejecting] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
   async function handleSaveAnalysis() {
     try {
+      setSavingAnalysis(true);
       const updated = await api.post<CaseRecord>(
         `/api/admin/cases/${caseData._id}/analysis`,
         { text: analysis }
@@ -42,11 +55,14 @@ export default function CaseDetailActions({ caseData, onCaseUpdate, onDeleted }:
       toast.success("Manual analysis saved");
     } catch (err: any) {
       toast.error(err.message ?? "Failed to save analysis");
+    } finally {
+      setSavingAnalysis(false);
     }
   }
 
   async function handleGeneratePrompt() {
     try {
+      setGeneratingPrompt(true);
       const { prompt } = await api.post<{ prompt: string }>(
         `/api/admin/cases/${caseData._id}/generate-prompt`,
         {}
@@ -56,20 +72,26 @@ export default function CaseDetailActions({ caseData, onCaseUpdate, onDeleted }:
       toast.success("Prompt copied to clipboard");
     } catch (err: any) {
       toast.error(err.message ?? "Failed to generate prompt");
+    } finally {
+      setGeneratingPrompt(false);
     }
   }
 
   async function handleSaveDraft() {
     try {
+      setSavingDraft(true);
       await api.post(`/api/admin/cases/${caseData._id}/email/draft`, emailDraft);
       toast.success("Draft saved");
     } catch (err: any) {
       toast.error(err.message ?? "Failed to save draft");
+    } finally {
+      setSavingDraft(false);
     }
   }
 
   async function handleSendEmail() {
     try {
+      setSendingEmail(true);
       const updated = await api.post<CaseRecord>(
         `/api/admin/cases/${caseData._id}/email/send`,
         {
@@ -84,22 +106,28 @@ export default function CaseDetailActions({ caseData, onCaseUpdate, onDeleted }:
       toast.success("Email sent");
     } catch (err: any) {
       toast.error(err.message ?? "Failed to send email");
+    } finally {
+      setSendingEmail(false);
     }
   }
 
   async function handleViewThread() {
     try {
+      setViewingThread(true);
       const { messages } = await api.get<{ messages: any[] }>(
         `/api/admin/cases/${caseData._id}/thread`
       );
       setThreadView(messages);
     } catch (err: any) {
       toast.error(err.message ?? "Failed to load thread");
+    } finally {
+      setViewingThread(false);
     }
   }
 
   async function handleReplyThread() {
     try {
+      setReplying(true);
       const updated = await api.post<CaseRecord>(
         `/api/admin/cases/${caseData._id}/thread/reply`,
         { body: replyBody }
@@ -109,11 +137,14 @@ export default function CaseDetailActions({ caseData, onCaseUpdate, onDeleted }:
       toast.success("Reply sent");
     } catch (err: any) {
       toast.error(err.message ?? "Failed to reply");
+    } finally {
+      setReplying(false);
     }
   }
 
   async function handleRequestInfo() {
     try {
+      setRequestingInfo(true);
       const updated = await api.post<CaseRecord>(
         `/api/admin/cases/${caseData._id}/request-info`,
         { message: requestInfoMessage }
@@ -122,11 +153,14 @@ export default function CaseDetailActions({ caseData, onCaseUpdate, onDeleted }:
       toast.success("Status set to need more info");
     } catch (err: any) {
       toast.error(err.message ?? "Failed to update status");
+    } finally {
+      setRequestingInfo(false);
     }
   }
 
   async function handleApprove() {
     try {
+      setApproving(true);
       const updated = await api.post<CaseRecord>(
         `/api/admin/cases/${caseData._id}/approve`,
         { code: resolutionCode }
@@ -135,11 +169,14 @@ export default function CaseDetailActions({ caseData, onCaseUpdate, onDeleted }:
       toast.success("Case approved");
     } catch (err: any) {
       toast.error(err.message ?? "Failed to approve case");
+    } finally {
+      setApproving(false);
     }
   }
 
   async function handleReject() {
     try {
+      setRejecting(true);
       const updated = await api.post<CaseRecord>(
         `/api/admin/cases/${caseData._id}/reject`,
         { note: rejectNote }
@@ -149,12 +186,14 @@ export default function CaseDetailActions({ caseData, onCaseUpdate, onDeleted }:
     } catch (err: any) {
       toast.error(err.message ?? "Failed to reject case");
     } finally {
+      setRejecting(false);
       setConfirmReject(false);
     }
   }
 
   async function handleDelete() {
     try {
+      setDeleting(true);
       await api.del(`/api/admin/cases/${caseData._id}`, {
         deleteAssets: true
       });
@@ -163,6 +202,7 @@ export default function CaseDetailActions({ caseData, onCaseUpdate, onDeleted }:
     } catch (err: any) {
       toast.error(err.message ?? "Failed to delete case");
     } finally {
+      setDeleting(false);
       setConfirmDelete(false);
     }
   }
@@ -202,9 +242,10 @@ export default function CaseDetailActions({ caseData, onCaseUpdate, onDeleted }:
         />
         <button
           onClick={handleSaveAnalysis}
-          className="mt-3 rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500"
+          disabled={savingAnalysis}
+          className="mt-3 rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          Save analysis
+          {savingAnalysis ? (<span className="inline-flex items-center gap-2"><Spinner className="h-4 w-4" /> Saving…</span>) : 'Save analysis'}
         </button>
       </section>
 
@@ -213,9 +254,10 @@ export default function CaseDetailActions({ caseData, onCaseUpdate, onDeleted }:
           <h3 className="text-lg font-semibold text-slate-800">AI prompt helper</h3>
           <button
             onClick={handleGeneratePrompt}
-            className="rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-700"
+            disabled={generatingPrompt}
+            className="rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            Generate prompt & copy
+            {generatingPrompt ? (<span className="inline-flex items-center gap-2"><Spinner className="h-4 w-4" /> Generating…</span>) : 'Generate prompt & copy'}
           </button>
         </div>
         {generatedPrompt && (
@@ -271,15 +313,17 @@ export default function CaseDetailActions({ caseData, onCaseUpdate, onDeleted }:
         <div className="mt-4 flex items-center gap-3">
           <button
             onClick={handleSaveDraft}
-            className="rounded-md border border-indigo-600 px-4 py-2 text-sm font-medium text-indigo-600 hover:bg-indigo-50"
+            disabled={savingDraft}
+            className="rounded-md border border-indigo-600 px-4 py-2 text-sm font-medium text-indigo-600 hover:bg-indigo-50 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            Save draft
+            {savingDraft ? (<span className="inline-flex items-center gap-2"><Spinner className="h-4 w-4" /> Saving…</span>) : 'Save draft'}
           </button>
           <button
             onClick={handleSendEmail}
-            className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500"
+            disabled={sendingEmail}
+            className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            Send email
+            {sendingEmail ? (<span className="inline-flex items-center gap-2"><Spinner className="h-4 w-4" /> Sending…</span>) : 'Send email'}
           </button>
         </div>
       </section>
@@ -289,9 +333,10 @@ export default function CaseDetailActions({ caseData, onCaseUpdate, onDeleted }:
           <h3 className="text-lg font-semibold text-slate-800">Email thread</h3>
           <button
             onClick={handleViewThread}
-            className="rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-600 hover:bg-slate-100"
+            disabled={viewingThread}
+            className="rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-600 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            View thread
+            {viewingThread ? (<span className="inline-flex items-center gap-2"><Spinner className="h-4 w-4" /> Loading…</span>) : 'View thread'}
           </button>
         </div>
         <CaseThread messages={threadView} />
@@ -305,9 +350,10 @@ export default function CaseDetailActions({ caseData, onCaseUpdate, onDeleted }:
           />
           <button
             onClick={handleReplyThread}
-            className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
+            disabled={replying || !replyBody.trim()}
+            className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            Reply in thread
+            {replying ? (<span className="inline-flex items-center gap-2"><Spinner className="h-4 w-4" /> Replying…</span>) : 'Reply in thread'}
           </button>
         </div>
       </section>
@@ -323,9 +369,10 @@ export default function CaseDetailActions({ caseData, onCaseUpdate, onDeleted }:
         />
         <button
           onClick={handleRequestInfo}
-          className="mt-3 rounded-md bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-500"
+          disabled={requestingInfo}
+          className="mt-3 rounded-md bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-500 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          Request info & mark status
+          {requestingInfo ? (<span className="inline-flex items-center gap-2"><Spinner className="h-4 w-4" /> Requesting…</span>) : 'Request info & mark status'}
         </button>
       </section>
 
@@ -340,9 +387,10 @@ export default function CaseDetailActions({ caseData, onCaseUpdate, onDeleted }:
         />
         <button
           onClick={handleApprove}
-          className="mt-3 rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500"
+          disabled={approving}
+          className="mt-3 rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          Approve & save code
+          {approving ? (<span className="inline-flex items-center gap-2"><Spinner className="h-4 w-4" /> Approving…</span>) : 'Approve & save code'}
         </button>
       </section>
 
@@ -357,9 +405,10 @@ export default function CaseDetailActions({ caseData, onCaseUpdate, onDeleted }:
         />
         <button
           onClick={() => setConfirmReject(true)}
-          className="mt-3 rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-500"
+          disabled={rejecting}
+          className="mt-3 rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          Reject case
+          {rejecting ? (<span className="inline-flex items-center gap-2"><Spinner className="h-4 w-4" /> Rejecting…</span>) : 'Reject case'}
         </button>
       </section>
 

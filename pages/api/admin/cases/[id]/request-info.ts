@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { withAdminAuth } from "../../../../../../lib/auth";
-import { requestInfo } from "../../../../../../lib/cases";
+import { withAdminAuth } from "../../../../../lib/auth";
+import { requestInfo } from "../../../../../lib/cases";
 
 export default withAdminAuth(async function handler(
   req: NextApiRequest,

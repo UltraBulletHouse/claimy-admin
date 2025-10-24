@@ -12,6 +12,8 @@ export interface CaseEmail {
   from: string;
   sentAt: string;
   threadId?: string;
+  messageId?: string;
+  references?: string[];
 }
 
 export interface CaseResolution {
