@@ -51,16 +51,23 @@ const CaseSchema = new Schema(
     status: {
       type: String,
       enum: [
+        // lowercase variants (legacy schema)
         "new",
         "inReview",
         "sent",
         "waitingReply",
         "needMoreInfo",
         "approved",
-        "rejected"
+        "rejected",
+        // uppercase variants (admin/types usage)
+        "PENDING",
+        "IN_REVIEW",
+        "NEED_INFO",
+        "APPROVED",
+        "REJECTED"
       ],
       default: "new"
-    } as { type: StringConstructor; enum: CaseStatus[]; default: CaseStatus },
+    } as unknown as { type: StringConstructor; enum: string[]; default: string },
     statusHistory: [StatusHistorySchema]
   },
   {

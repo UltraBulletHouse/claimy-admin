@@ -1,7 +1,7 @@
-import type { NextApiRequest, NextApiResponse } from "next";
-import { withAdminAuth } from "../../../../../../../lib/auth";
-import { getCaseById, recordEmailSent } from "../../../../../../../lib/cases";
-import { sendGmailMessage } from "../../../../../../../lib/gmail";
+import type { NextApiRequest, NextApiResponse } from "next/types";
+import { withAdminAuth } from "../../../../../../lib/auth";
+import { getCaseById, recordEmailSent } from "../../../../../../lib/cases";
+import { sendGmailMessage } from "../../../../../../lib/gmail";
 
 export default withAdminAuth(async function handler(
   req: NextApiRequest,
