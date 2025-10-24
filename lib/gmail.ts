@@ -1,30 +1,33 @@
 import { google } from "googleapis";
 import type { CaseRecord } from "../types/case";
 
-const {
-  GMAIL_CLIENT_ID,
-  GMAIL_CLIENT_SECRET,
-  GMAIL_REFRESH_TOKEN,
-  GMAIL_USER
-} = process.env;
+const env = process.env as Record<string, string | undefined>;
 
-if (
-  !GMAIL_CLIENT_ID ||
-  !GMAIL_CLIENT_SECRET ||
-  !GMAIL_REFRESH_TOKEN ||
-  !GMAIL_USER
-) {
-  throw new Error("Missing Gmail OAuth environment variables");
+function getConfig() {
+  const CLIENT_ID = env.GMAIL_CLIENT_ID || env.GOOGLE_CLIENT_ID || env.NEXT_PUBLIC_GMAIL_CLIENT_ID || env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+  const CLIENT_SECRET = env.GMAIL_CLIENT_SECRET || env.GOOGLE_CLIENT_SECRET || env.NEXT_PUBLIC_GMAIL_CLIENT_SECRET || env.NEXT_PUBLIC_GOOGLE_CLIENT_SECRET;
+  const REFRESH_TOKEN = env.GMAIL_REFRESH_TOKEN || env.GMAIL_OAUTH_REFRESH_TOKEN || env.GOOGLE_REFRESH_TOKEN || env.NEXT_PUBLIC_GMAIL_REFRESH_TOKEN;
+  const USER = env.GMAIL_USER || env.MAIL_FROM || env.EMAIL_FROM || env.SMTP_USER || env.NEXT_PUBLIC_GMAIL_USER || env.ADMIN_EMAIL;
+  return { CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN, USER };
+}
+
+function assertConfig() {
+  const { CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN, USER } = getConfig();
+  const missing: string[] = [];
+  if (!CLIENT_ID) missing.push('GMAIL_CLIENT_ID/GOOGLE_CLIENT_ID');
+  if (!CLIENT_SECRET) missing.push('GMAIL_CLIENT_SECRET/GOOGLE_CLIENT_SECRET');
+  if (!REFRESH_TOKEN) missing.push('GMAIL_REFRESH_TOKEN/GMAIL_OAUTH_REFRESH_TOKEN');
+  if (!USER) missing.push('GMAIL_USER/MAIL_FROM/EMAIL_FROM');
+  if (missing.length) {
+    throw new Error(`Gmail OAuth is not configured. Missing: ${missing.join(', ')}`);
+  }
 }
 
 function getOAuth2Client() {
-  const oauth2Client = new google.auth.OAuth2(
-    GMAIL_CLIENT_ID,
-    GMAIL_CLIENT_SECRET
-  );
-  oauth2Client.setCredentials({
-    refresh_token: GMAIL_REFRESH_TOKEN
-  });
+  const { CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN } = getConfig();
+  assertConfig();
+  const oauth2Client = new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET);
+  oauth2Client.setCredentials({ refresh_token: REFRESH_TOKEN });
   return oauth2Client;
 }
 
@@ -46,8 +49,9 @@ export async function sendGmailMessage(options: SendEmailOptions) {
   const oauth2Client = getOAuth2Client();
   const gmail = google.gmail({ version: "v1", auth: oauth2Client });
 
+  const { USER } = getConfig();
   const message = buildMimeMessage({
-    from: GMAIL_USER as string,
+    from: USER as string,
     to: options.to,
     subject: options.subject,
     body: options.body,

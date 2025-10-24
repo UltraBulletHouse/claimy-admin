@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { withAdminAuth } from "../../../../../../../lib/auth";
-import { getCaseById, upsertEmailsFromThread } from "../../../../../../../lib/cases";
-import { fetchThread, mapThreadToEmails, parseThreadMessages } from "../../../../../../../lib/gmail";
+import { withAdminAuth } from "../../../../../../lib/auth";
+import { getCaseById, upsertEmailsFromThread } from "../../../../../../lib/cases";
+import { fetchThread, mapThreadToEmails, parseThreadMessages } from "../../../../../../lib/gmail";
 
 export default withAdminAuth(async function handler(
   req: NextApiRequest,
