@@ -8,7 +8,11 @@ export function useAdminApi() {
   return useMemo(() => {
     return {
       async get<T>(url: string) {
-        return apiFetch<T>(url, { method: "GET" }, { token: adminSession?.token ?? null });
+        return apiFetch<T>(
+          url,
+          { method: "GET" },
+          { token: adminSession?.token ?? null, firebaseToken: adminSession?.firebaseIdToken ?? null }
+        );
       },
       async post<T>(url: string, body: unknown) {
         return apiFetch<T>(
@@ -17,7 +21,17 @@ export function useAdminApi() {
             method: "POST",
             body: JSON.stringify(body)
           },
-          { token: adminSession?.token ?? null }
+          { token: adminSession?.token ?? null, firebaseToken: adminSession?.firebaseIdToken ?? null }
+        );
+      },
+      async put<T>(url: string, body: unknown) {
+        return apiFetch<T>(
+          url,
+          {
+            method: "PUT",
+            body: JSON.stringify(body)
+          },
+          { token: adminSession?.token ?? null, firebaseToken: adminSession?.firebaseIdToken ?? null }
         );
       },
       async del<T>(url: string, body?: unknown) {
@@ -27,9 +41,9 @@ export function useAdminApi() {
             method: "DELETE",
             body: body ? JSON.stringify(body) : undefined
           },
-          { token: adminSession?.token ?? null }
+          { token: adminSession?.token ?? null, firebaseToken: adminSession?.firebaseIdToken ?? null }
         );
       }
     };
-  }, [adminSession?.token]);
+  }, [adminSession?.token, adminSession?.firebaseIdToken]);
 }

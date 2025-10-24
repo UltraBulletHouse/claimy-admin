@@ -13,6 +13,7 @@ import toast from "react-hot-toast";
 interface AdminSession {
   adminEmail: string;
   token: string;
+  firebaseIdToken: string;
   expiresAt: string;
 }
 
@@ -55,6 +56,7 @@ export function AdminSessionProvider({ children }: { children: React.ReactNode }
     setAdminSession({
       adminEmail: currentUser.email ?? "",
       token: data.token,
+      firebaseIdToken: idToken,
       expiresAt: data.expiresAt
     });
   }, [auth]);

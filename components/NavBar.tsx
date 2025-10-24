@@ -1,14 +1,53 @@
+import Link from "next/link";
+import { useRouter } from "next/router";
 import { useAdminSession } from "../context/AdminSessionContext";
 
 export default function NavBar() {
   const { adminSession, signOutAdmin, signIn, loading } = useAdminSession();
+  const router = useRouter();
+  const pathname = router.pathname;
+
+  const navItems = [
+    {
+      href: "/",
+      label: "Cases",
+      isActive(path: string) {
+        return path === "/" || path.startsWith("/cases");
+      }
+    },
+    {
+      href: "/stores",
+      label: "Stores",
+      isActive(path: string) {
+        return path === "/stores";
+      }
+    }
+  ];
 
   return (
     <header className="border-b border-slate-200 bg-white">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
-        <div>
-          <h1 className="text-xl font-semibold text-slate-800">Claimy Admin</h1>
-          <p className="text-sm text-slate-500">Internal dashboard</p>
+      <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-6">
+          <div>
+            <h1 className="text-xl font-semibold text-slate-800">Claimy Admin</h1>
+            <p className="text-sm text-slate-500">Internal dashboard</p>
+          </div>
+          <nav className="flex gap-4">
+            {navItems.map((item) => {
+              const active = item.isActive(pathname);
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`text-sm font-medium transition ${
+                    active ? "text-indigo-600" : "text-slate-500 hover:text-slate-700"
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
+          </nav>
         </div>
         <div>
           {loading ? (
