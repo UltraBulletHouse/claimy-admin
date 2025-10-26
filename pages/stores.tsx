@@ -11,12 +11,14 @@ interface StoresResponse {
   total: number;
 }
 
-const DEFAULT_COLOR = "#3568FF";
+const DEFAULT_PRIMARY_COLOR = "#3568FF";
+const DEFAULT_SECONDARY_COLOR = DEFAULT_PRIMARY_COLOR;
 
 interface StoreFormState {
   storeId: string;
   name: string;
   primaryColor: string;
+  secondaryColor: string;
   email: string;
 }
 
@@ -31,7 +33,8 @@ export default function StoresPage() {
   const [formState, setFormState] = useState<StoreFormState>({
     storeId: "",
     name: "",
-    primaryColor: DEFAULT_COLOR,
+    primaryColor: DEFAULT_PRIMARY_COLOR,
+    secondaryColor: DEFAULT_SECONDARY_COLOR,
     email: ""
   });
 
@@ -42,7 +45,8 @@ export default function StoresPage() {
     setFormState({
       storeId: "",
       name: "",
-      primaryColor: DEFAULT_COLOR,
+      primaryColor: DEFAULT_PRIMARY_COLOR,
+      secondaryColor: DEFAULT_SECONDARY_COLOR,
       email: ""
     });
   }, []);
@@ -78,10 +82,17 @@ export default function StoresPage() {
         storeId: formState.storeId.trim(),
         name: formState.name.trim(),
         primaryColor: formState.primaryColor.trim(),
+        secondaryColor: formState.secondaryColor.trim(),
         email: formState.email.trim()
       };
 
-      if (!payload.storeId || !payload.name || !payload.primaryColor || !payload.email) {
+      if (
+        !payload.storeId ||
+        !payload.name ||
+        !payload.primaryColor ||
+        !payload.secondaryColor ||
+        !payload.email
+      ) {
         toast.error("Please fill in all the fields.");
         return;
       }
@@ -102,6 +113,7 @@ export default function StoresPage() {
             storeId: updated.storeId,
             name: updated.name,
             primaryColor: updated.primaryColor,
+            secondaryColor: updated.secondaryColor ?? "",
             email: updated.email
           });
           toast.success("Store updated.");
@@ -121,7 +133,17 @@ export default function StoresPage() {
         setSubmitting(false);
       }
     },
-    [api, editingStoreId, formState.email, formState.name, formState.primaryColor, formState.storeId, resetForm, submitting]
+    [
+      api,
+      editingStoreId,
+      formState.email,
+      formState.name,
+      formState.primaryColor,
+      formState.secondaryColor,
+      formState.storeId,
+      resetForm,
+      submitting
+    ]
   );
 
   const startEditing = useCallback((store: StoreRecord) => {
@@ -130,6 +152,7 @@ export default function StoresPage() {
       storeId: store.storeId,
       name: store.name,
       primaryColor: store.primaryColor,
+      secondaryColor: store.secondaryColor ?? "",
       email: store.email
     });
   }, []);
@@ -233,6 +256,28 @@ export default function StoresPage() {
               </p>
             </div>
             <div>
+              <label className="block text-sm font-medium text-slate-700">Secondary color</label>
+              <div className="mt-1 flex items-center gap-3">
+                <input
+                  type="text"
+                  value={formState.secondaryColor}
+                  onChange={(event) =>
+                    setFormState((prev) => ({ ...prev, secondaryColor: event.target.value }))
+                  }
+                  className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                  placeholder="#111827"
+                />
+                <span
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-300"
+                  style={{ backgroundColor: formState.secondaryColor || "#ffffff" }}
+                  aria-hidden
+                />
+              </div>
+              <p className="mt-1 text-xs text-slate-400">
+                Optional accent for gradients and outlines in the customer app.
+              </p>
+            </div>
+            <div>
               <label className="block text-sm font-medium text-slate-700">Contact email</label>
               <input
                 type="email"
@@ -291,7 +336,7 @@ export default function StoresPage() {
                   <tr>
                     <th className="px-4 py-3">Name</th>
                     <th className="px-4 py-3">Store ID</th>
-                    <th className="px-4 py-3">Color</th>
+                    <th className="px-4 py-3">Colors</th>
                     <th className="px-4 py-3">Email</th>
                     <th className="px-4 py-3 text-right">Actions</th>
                   </tr>
@@ -305,14 +350,26 @@ export default function StoresPage() {
                         <td className="px-4 py-3 text-slate-800">{store.name}</td>
                         <td className="px-4 py-3 text-slate-500">{store.storeId}</td>
                         <td className="px-4 py-3">
-                          <span className="flex items-center gap-2 text-slate-600">
-                            <span
-                              className="inline-flex h-5 w-5 rounded-full border border-slate-200"
-                              style={{ backgroundColor: store.primaryColor }}
-                              aria-hidden
-                            />
-                            {store.primaryColor}
-                          </span>
+                          <div className="flex flex-col gap-1 text-slate-600">
+                            <span className="flex items-center gap-2">
+                              <span
+                                className="inline-flex h-5 w-5 rounded-full border border-slate-200"
+                                style={{ backgroundColor: store.primaryColor }}
+                                aria-hidden
+                              />
+                              <span className="text-xs uppercase text-slate-400">Primary</span>
+                              {store.primaryColor}
+                            </span>
+                            <span className="flex items-center gap-2">
+                              <span
+                                className="inline-flex h-5 w-5 rounded-full border border-slate-200"
+                                style={{ backgroundColor: store.secondaryColor || "#ffffff" }}
+                                aria-hidden
+                              />
+                              <span className="text-xs uppercase text-slate-400">Secondary</span>
+                              {store.secondaryColor ?? "—"}
+                            </span>
+                          </div>
                         </td>
                         <td className="px-4 py-3 text-slate-500">{store.email}</td>
                         <td className="px-4 py-3 text-right">

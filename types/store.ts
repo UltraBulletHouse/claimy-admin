@@ -3,6 +3,7 @@ export interface StoreRecord {
   storeId: string;
   name: string;
   primaryColor: string;
+  secondaryColor?: string;
   email: string;
   createdAt: string;
   updatedAt: string;
