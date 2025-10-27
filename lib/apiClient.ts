@@ -3,7 +3,7 @@ export interface ApiClientOptions {
   firebaseToken?: string | null;
 }
 
-const API_BASE =
+export const API_BASE =
   process.env.NEXT_PUBLIC_ADMIN_API_BASE_URL &&
   process.env.NEXT_PUBLIC_ADMIN_API_BASE_URL.trim().length > 0
     ? process.env.NEXT_PUBLIC_ADMIN_API_BASE_URL.trim()

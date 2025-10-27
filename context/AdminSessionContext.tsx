@@ -43,7 +43,9 @@ export function AdminSessionProvider({ children }: { children: React.ReactNode }
       return;
     }
     const idToken = await currentUser.getIdToken(/* forceRefresh */ true);
-    const res = await fetch("/api/admin/session", {
+    const { API_BASE } = await import("../lib/apiClient");
+    const sessionUrl = new URL("/api/admin/session", API_BASE).toString();
+    const res = await fetch(sessionUrl, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${idToken}`
