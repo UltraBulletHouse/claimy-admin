@@ -48,7 +48,8 @@ export function AdminSessionProvider({ children }: { children: React.ReactNode }
     const res = await fetch(sessionUrl, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${idToken}`
+        Authorization: `Bearer ${idToken}`,
+        "x-firebase-authorization": `Bearer ${idToken}`
       }
     });
     if (!res.ok) {
