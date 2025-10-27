@@ -29,7 +29,7 @@ const AdminSessionContext = createContext<AdminSessionContextValue | undefined>(
   undefined
 );
 
-const allowedEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL;
+const allowedEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL ?? "";
 
 export function AdminSessionProvider({ children }: { children: React.ReactNode }) {
   const [adminSession, setAdminSession] = useState<AdminSession | null>(null);

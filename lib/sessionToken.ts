@@ -1,8 +1,8 @@
 import jwt from "jsonwebtoken";
 
-const { ADMIN_SECRET_TOKEN } = process.env;
+const ADMIN_SECRET_TOKEN = process.env.ADMIN_SECRET_TOKEN as string;
 
-if (!ADMIN_SECRET_TOKEN) {
+if (!ADMIN_SECRET_TOKEN || ADMIN_SECRET_TOKEN.trim().length === 0) {
   throw new Error("Missing ADMIN_SECRET_TOKEN");
 }
 

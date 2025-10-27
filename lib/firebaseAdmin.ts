@@ -1,8 +1,8 @@
 import * as admin from "firebase-admin";
 
 const {
-  FIREBASE_PROJECT_ID,
-  FIREBASE_CLIENT_EMAIL,
+  FIREBASE_PROJECT_ID = "",
+  FIREBASE_CLIENT_EMAIL = "",
   FIREBASE_PRIVATE_KEY
 } = process.env;
 
