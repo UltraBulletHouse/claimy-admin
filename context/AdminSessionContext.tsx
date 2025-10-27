@@ -6,7 +6,7 @@ import {
   useMemo,
   useState
 } from "react";
-import { GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "firebase/auth";
+import { GoogleAuthProvider, signInWithPopup, signInWithRedirect, signOut, onAuthStateChanged } from "firebase/auth";
 import { getFirebaseAuth } from "../lib/firebaseClient";
 import toast from "react-hot-toast";
 
@@ -108,7 +108,8 @@ export function AdminSessionProvider({ children }: { children: React.ReactNode }
     setLoading(true);
     try {
       const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
+      // Use redirect-based sign-in to avoid COOP/COEP popup issues in some browsers/hosts
+      await signInWithRedirect(auth, provider);
     } catch (err: any) {
       toast.error(err.message ?? "Failed to sign in");
       setLoading(false);
