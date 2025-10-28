@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import jwt from "jsonwebtoken";
 
 const ADMIN_SECRET_TOKEN = process.env.ADMIN_SECRET_TOKEN as string;
@@ -5,6 +6,8 @@ const ADMIN_SECRET_TOKEN = process.env.ADMIN_SECRET_TOKEN as string;
 if (!ADMIN_SECRET_TOKEN || ADMIN_SECRET_TOKEN.trim().length === 0) {
   throw new Error("Missing ADMIN_SECRET_TOKEN");
 }
+
+const ADMIN_SESSION_SECRET = crypto.createHash("sha256").update(ADMIN_SECRET_TOKEN).digest();
 
 const SESSION_TTL_SECONDS = 60 * 60; // 1 hour
 
@@ -15,9 +18,9 @@ export interface AdminSessionPayload {
 
 export function createAdminSessionToken(payload: AdminSessionPayload) {
   const expiresIn = SESSION_TTL_SECONDS;
-  const token = jwt.sign(payload, ADMIN_SECRET_TOKEN, {
+  const token = jwt.sign(payload, ADMIN_SESSION_SECRET, {
     expiresIn,
-    algorithm: 'HS256'
+    algorithm: "HS256"
   });
   const expiresAt = new Date(Date.now() + expiresIn * 1000).toISOString();
   return { token, expiresAt };
@@ -25,7 +28,9 @@ export function createAdminSessionToken(payload: AdminSessionPayload) {
 
 export function verifyAdminSessionToken(token: string) {
   try {
-    const decoded = jwt.verify(token, ADMIN_SECRET_TOKEN, { algorithms: ['HS256'] }) as jwt.JwtPayload & {
+    const decoded = jwt.verify(token, ADMIN_SESSION_SECRET, {
+      algorithms: ["HS256"]
+    }) as jwt.JwtPayload & {
       uid: string;
       email: string;
     };
