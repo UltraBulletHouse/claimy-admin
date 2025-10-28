@@ -64,7 +64,7 @@ export default function CaseDetailActions({ caseData, onCaseUpdate, onDeleted }:
     try {
       setGeneratingPrompt(true);
       const { prompt } = await api.post<{ prompt: string }>(
-        `/api/admin/cases/${caseData._id}/generate-prompt`,
+        `/api/local-admin/cases/${caseData._id}/generate-prompt`,
         {}
       );
       setGeneratedPrompt(prompt);
