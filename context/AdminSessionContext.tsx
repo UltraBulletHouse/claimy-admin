@@ -29,7 +29,10 @@ const AdminSessionContext = createContext<AdminSessionContextValue | undefined>(
   undefined
 );
 
-const allowedEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL ?? "";
+const allowedEmail =
+  process.env.NEXT_PUBLIC_ADMIN_EMAIL && process.env.NEXT_PUBLIC_ADMIN_EMAIL.trim().length > 0
+    ? process.env.NEXT_PUBLIC_ADMIN_EMAIL.trim().toLowerCase()
+    : "";
 
 export function AdminSessionProvider({ children }: { children: React.ReactNode }) {
   const [adminSession, setAdminSession] = useState<AdminSession | null>(null);
@@ -71,7 +74,8 @@ export function AdminSessionProvider({ children }: { children: React.ReactNode }
         setLoading(false);
         return;
       }
-      if (!user.email || user.email !== allowedEmail) {
+      const userEmail = user.email?.trim().toLowerCase() ?? "";
+      if (!userEmail || userEmail !== allowedEmail) {
         toast.error("Access denied for this Google account");
         await signOut(auth);
         setAdminSession(null);

@@ -10,6 +10,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return;
   }
 
+  const adminEmailEnv = process.env.ADMIN_EMAIL?.trim().toLowerCase();
+  if (!adminEmailEnv) {
+    res.status(500).json({ message: "Admin not configured" });
+    return;
+  }
+
   const idToken = extractBearerToken(req.headers.authorization);
   if (!idToken) {
     res.status(401).json({ message: "Missing Firebase ID token" });
@@ -18,13 +24,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     const decoded = await admin.auth().verifyIdToken(idToken);
-    if (!decoded.email || decoded.email !== process.env.ADMIN_EMAIL) {
+    const decodedEmail = decoded.email?.trim().toLowerCase();
+    if (!decodedEmail || decodedEmail !== adminEmailEnv) {
       res.status(403).json({ message: "Unauthorized admin email" });
       return;
     }
     const session = createAdminSessionToken({
       uid: decoded.uid,
-      email: decoded.email
+      email: decodedEmail
     });
     res.status(200).json(session);
   } catch (err: any) {
