@@ -29,10 +29,7 @@ const AdminSessionContext = createContext<AdminSessionContextValue | undefined>(
   undefined
 );
 
-const allowedEmail =
-  process.env.NEXT_PUBLIC_ADMIN_EMAIL && process.env.NEXT_PUBLIC_ADMIN_EMAIL.trim().length > 0
-    ? process.env.NEXT_PUBLIC_ADMIN_EMAIL.trim().toLowerCase()
-    : "";
+const allowedEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL ?? "";
 
 export function AdminSessionProvider({ children }: { children: React.ReactNode }) {
   const [adminSession, setAdminSession] = useState<AdminSession | null>(null);
@@ -46,13 +43,10 @@ export function AdminSessionProvider({ children }: { children: React.ReactNode }
       return;
     }
     const idToken = await currentUser.getIdToken(/* forceRefresh */ true);
-    const { API_BASE } = await import("../lib/apiClient");
-    const sessionUrl = new URL("/api/admin/session", API_BASE).toString();
-    const res = await fetch(sessionUrl, {
+    const res = await fetch("/api/admin/session", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${idToken}`,
-        "x-firebase-authorization": `Bearer ${idToken}`
+        Authorization: `Bearer ${idToken}`
       }
     });
     if (!res.ok) {
@@ -74,8 +68,7 @@ export function AdminSessionProvider({ children }: { children: React.ReactNode }
         setLoading(false);
         return;
       }
-      const userEmail = user.email?.trim().toLowerCase() ?? "";
-      if (!userEmail || userEmail !== allowedEmail) {
+      if (!user.email || user.email !== allowedEmail) {
         toast.error("Access denied for this Google account");
         await signOut(auth);
         setAdminSession(null);
