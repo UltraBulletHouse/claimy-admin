@@ -51,7 +51,7 @@ export default function CaseDetailActions({ caseData, onCaseUpdate, onDeleted }:
         `/api/admin/cases/${caseData._id}/analysis`,
         { text: analysis }
       );
-      onCaseUpdate(updated);
+      onCaseUpdate({ ...caseData, ...updated });
       toast.success("Manual analysis saved");
     } catch (err: any) {
       toast.error(err.message ?? "Failed to save analysis");
@@ -102,7 +102,7 @@ export default function CaseDetailActions({ caseData, onCaseUpdate, onDeleted }:
           attachReceipt: includeReceipt
         }
       );
-      onCaseUpdate(updated);
+      onCaseUpdate({ ...caseData, ...updated });
       toast.success("Email sent");
     } catch (err: any) {
       toast.error(err.message ?? "Failed to send email");
@@ -133,7 +133,7 @@ export default function CaseDetailActions({ caseData, onCaseUpdate, onDeleted }:
         { body: replyBody }
       );
       setReplyBody("");
-      onCaseUpdate(updated);
+      onCaseUpdate({ ...caseData, ...updated });
       toast.success("Reply sent");
     } catch (err: any) {
       toast.error(err.message ?? "Failed to reply");
@@ -149,7 +149,7 @@ export default function CaseDetailActions({ caseData, onCaseUpdate, onDeleted }:
         `/api/admin/cases/${caseData._id}/request-info`,
         { message: requestInfoMessage }
       );
-      onCaseUpdate(updated);
+      onCaseUpdate({ ...caseData, ...updated });
       toast.success("Status set to need more info");
     } catch (err: any) {
       toast.error(err.message ?? "Failed to update status");
@@ -165,7 +165,7 @@ export default function CaseDetailActions({ caseData, onCaseUpdate, onDeleted }:
         `/api/admin/cases/${caseData._id}/approve`,
         { code: resolutionCode }
       );
-      onCaseUpdate(updated);
+      onCaseUpdate({ ...caseData, ...updated });
       toast.success("Case approved");
     } catch (err: any) {
       toast.error(err.message ?? "Failed to approve case");
@@ -181,7 +181,7 @@ export default function CaseDetailActions({ caseData, onCaseUpdate, onDeleted }:
         `/api/admin/cases/${caseData._id}/reject`,
         { note: rejectNote }
       );
-      onCaseUpdate(updated);
+      onCaseUpdate({ ...caseData, ...updated });
       toast.success("Case rejected");
     } catch (err: any) {
       toast.error(err.message ?? "Failed to reject case");
