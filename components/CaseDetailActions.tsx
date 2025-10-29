@@ -111,13 +111,67 @@ export default function CaseDetailActions({ caseData, onCaseUpdate, onDeleted }:
     }
   }
 
+  function decodeBase64Url(data?: string): string {
+    if (!data) return "";
+    try {
+      const b64 = data.replace(/-/g, "+").replace(/_/g, "/");
+      return Buffer.from(b64, "base64").toString("utf-8");
+    } catch {
+      return "";
+    }
+  }
+  function extractPlainText(payload: any): string {
+    if (!payload) return "";
+    // If message is text/plain directly
+    if (payload.mimeType === "text/plain" && payload.body?.data) {
+      return decodeBase64Url(payload.body.data);
+    }
+    // If multipart, search parts for text/plain
+    const parts: any[] = payload.parts || [];
+    for (const p of parts) {
+      if (p.mimeType === "text/plain" && p.body?.data) {
+        return decodeBase64Url(p.body.data);
+      }
+      // some structures nest parts
+      if (p.parts && p.parts.length) {
+        const nested = extractPlainText(p);
+        if (nested) return nested;
+      }
+    }
+    // Fallback empty
+    return "";
+  }
+  function parseAddr(value?: string | null): string | undefined {
+    if (!value) return undefined;
+    const m = value.match(/<([^>]+)>/);
+    return (m ? m[1] : value).trim();
+  }
   async function handleViewThread() {
     try {
       setViewingThread(true);
-      const { messages } = await api.get<{ messages: any[] }>(
+      const thr = await api.get<any>(
         `/api/admin/cases/${caseData._id}/thread`
       );
-      setThreadView(messages);
+      const messages: any[] = Array.isArray(thr?.messages) ? thr.messages : [];
+      const mapped = messages.map((m) => {
+        const headersArr: any[] = m.payload?.headers || [];
+        const header = (name: string) => headersArr.find((x: any) => x.name?.toLowerCase() === name.toLowerCase())?.value || undefined;
+        const subject = header("Subject") || "";
+        const from = parseAddr(header("From"));
+        const to = parseAddr(header("To"));
+        const date = header("Date");
+        const bodyPlain = extractPlainText(m.payload) || m.snippet || "";
+        return {
+          id: m.id,
+          subject,
+          from,
+          to,
+          date,
+          snippet: m.snippet,
+          bodyPlain,
+        };
+      });
+      setThreadView(mapped);
     } catch (err: any) {
       toast.error(err.message ?? "Failed to load thread");
     } finally {
@@ -129,7 +183,7 @@ export default function CaseDetailActions({ caseData, onCaseUpdate, onDeleted }:
     try {
       setReplying(true);
       const updated = await api.post<CaseRecord>(
-        `/api/admin/cases/${caseData._id}/thread/reply`,
+        `/api/admin/cases/${caseData._id}/reply`,
         { body: replyBody }
       );
       setReplyBody("");
