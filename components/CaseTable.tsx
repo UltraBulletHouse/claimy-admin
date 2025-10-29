@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { useRouter } from "next/router";
 import CaseStatusBadge from "./CaseStatusBadge";
 import type { CaseRecord } from "../types/case";
 
@@ -11,6 +11,8 @@ interface Props {
 }
 
 export default function CaseTable({ cases, total, onPaginate, limit, skip }: Props) {
+  const router = useRouter();
+  const goTo = (id: string) => router.push(`/cases/${id}`);
   return (
     <div className="mt-6 rounded-lg border border-slate-200 bg-white shadow-sm">
       <table className="min-w-full divide-y divide-slate-200">
@@ -35,11 +37,11 @@ export default function CaseTable({ cases, total, onPaginate, limit, skip }: Pro
         </thead>
         <tbody className="divide-y divide-slate-100">
           {cases.map((caseItem) => (
-            <tr key={caseItem._id} className="hover:bg-slate-50">
+            <tr key={caseItem._id} className="hover:bg-slate-50 cursor-pointer" onClick={() => goTo(caseItem._id)} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') goTo(caseItem._id); }}>
               <td className="px-4 py-4 text-sm font-medium text-indigo-600">
-                <Link href={`/cases/${caseItem._id}`} className="hover:underline">
+                <span className="hover:underline">
                   {caseItem.productName ?? caseItem.product ?? caseItem.description ?? "Untitled"}
-                </Link>
+                </span>
               </td>
               <td className="px-4 py-4 text-sm text-slate-600">
                 {caseItem.storeName ?? caseItem.store ?? "—"}
