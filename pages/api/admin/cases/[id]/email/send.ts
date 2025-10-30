@@ -19,7 +19,7 @@ export default withAdminAuth(async function handler(
     return;
   }
   const body = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
-  const { subject, body: emailBody, to, attachProduct, attachReceipt } = body ?? {};
+  const { subject, body: emailBody, to, attachProduct, attachReceipt, attachInfoFile } = body ?? {};
   if (!subject || !emailBody || !to) {
     res.status(400).json({ message: "Subject, body and to are required" });
     return;
@@ -30,7 +30,7 @@ export default withAdminAuth(async function handler(
     return;
   }
 
-  const attachments = [];
+  const attachments: Array<{ filename: string; mimeType: string; data: Buffer }> = [];
   const productImageUrl =
     caseRecord.imageUrls?.product ?? caseRecord.productImageUrl ?? caseRecord.images?.[0];
   const receiptImageUrl =
@@ -77,6 +77,15 @@ export default withAdminAuth(async function handler(
     },
     req.admin?.email ?? "admin"
   );
+
+  if (attachInfoFile && caseRecord.infoResponse?.fileUrl) {
+    const asset = await fetchAssetBuffer(caseRecord.infoResponse.fileUrl);
+    attachments.push({
+      filename: "user-attachment.jpg",
+      mimeType: asset.contentType,
+      data: asset.data
+    });
+  }
 
   if (!updated) {
     res.status(500).json({ message: "Failed to update case with email" });

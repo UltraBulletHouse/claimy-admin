@@ -23,6 +23,24 @@ const StatusHistorySchema = new Schema(
   { _id: false }
 );
 
+const InfoRequestSchema = new Schema(
+  {
+    message: { type: String, required: true },
+    requiresFile: { type: Boolean, default: false },
+    requestedAt: { type: Date, required: true },
+  },
+  { _id: false }
+);
+
+const InfoResponseSchema = new Schema(
+  {
+    answer: { type: String },
+    fileUrl: { type: String, default: null },
+    submittedAt: { type: Date, required: true },
+  },
+  { _id: false }
+);
+
 const CaseSchema = new Schema(
   {
     userId: String,
@@ -68,7 +86,9 @@ const CaseSchema = new Schema(
       ],
       default: "new"
     } as unknown as { type: StringConstructor; enum: string[]; default: string },
-    statusHistory: [StatusHistorySchema]
+    statusHistory: [StatusHistorySchema],
+    infoRequest: { type: InfoRequestSchema, default: null },
+    infoResponse: { type: InfoResponseSchema, default: null }
   },
   {
     timestamps: true

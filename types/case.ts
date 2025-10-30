@@ -21,6 +21,18 @@ export interface CaseResolution {
   addedAt?: string;
 }
 
+export interface InfoRequest {
+  message: string;
+  requiresFile?: boolean;
+  requestedAt: string;
+}
+
+export interface InfoResponse {
+  answer?: string;
+  fileUrl?: string | null;
+  submittedAt: string;
+}
+
 export interface StatusHistoryEntry {
   status: CaseStatus | string;
   by: string;
@@ -58,4 +70,6 @@ export interface CaseRecord {
   resolution?: CaseResolution;
   status: CaseStatus;
   statusHistory?: StatusHistoryEntry[];
+  infoRequest?: InfoRequest;
+  infoResponse?: InfoResponse;
 }

@@ -192,26 +192,36 @@ export async function replyStatusUpdate(
 export async function requestInfo(
   id: string,
   message: string,
-  by: string
+  by: string,
+  requiresFile: boolean = false
 ) {
   await connectMongo();
   const now = new Date();
-  const doc = await CaseModel.findByIdAndUpdate(
-    id,
-    {
-      status: "NEED_INFO",
-      $push: {
-        statusHistory: {
-          status: "NEED_INFO",
-          by,
-          at: now,
-          note: message
-        }
-      }
-    },
-    { new: true }
-  ).lean();
-  return doc ? mapCase(doc) : null;
+
+  const existing = await CaseModel.findById(id);
+  if (!existing) {
+    return null;
+  }
+
+  existing.status = "NEED_INFO";
+  (existing as any).infoRequest = {
+    message,
+    requiresFile,
+    requestedAt: now,
+  };
+  (existing as any).infoResponse = null;
+
+  const history = existing.statusHistory ?? [];
+  history.push({
+    status: "NEED_INFO",
+    by,
+    at: now,
+    note: message,
+  } as any);
+  (existing as any).statusHistory = history;
+
+  await existing.save();
+  return mapCase(existing.toObject());
 }
 
 export async function approveCase(
@@ -346,7 +356,21 @@ function mapCase(doc: any): CaseRecord {
       by: entry.by,
       at: entry.at?.toISOString() ?? new Date().toISOString(),
       note: entry.note ?? undefined
-    }))
+    })),
+    infoRequest: doc.infoRequest
+      ? {
+          message: doc.infoRequest.message,
+          requiresFile: !!doc.infoRequest.requiresFile,
+          requestedAt: doc.infoRequest.requestedAt?.toISOString() ?? new Date().toISOString(),
+        }
+      : undefined,
+    infoResponse: doc.infoResponse
+      ? {
+          answer: doc.infoResponse.answer ?? undefined,
+          fileUrl: doc.infoResponse.fileUrl ?? null,
+          submittedAt: doc.infoResponse.submittedAt?.toISOString() ?? new Date().toISOString(),
+        }
+      : undefined,
   };
 }
 

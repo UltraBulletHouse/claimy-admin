@@ -18,11 +18,12 @@ export default withAdminAuth(async function handler(
   }
   const body = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
   const message = body?.message;
+  const requiresFile = Boolean(body?.requiresFile);
   if (typeof message !== "string" || !message.trim()) {
     res.status(400).json({ message: "Message required" });
     return;
   }
-  const updated = await requestInfo(id, message, req.admin?.email ?? "admin");
+  const updated = await requestInfo(id, message, req.admin?.email ?? "admin", requiresFile);
   if (!updated) {
     res.status(404).json({ message: "Case not found" });
     return;

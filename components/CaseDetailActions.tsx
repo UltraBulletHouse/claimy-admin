@@ -41,8 +41,10 @@ export default function CaseDetailActions({ caseData, onCaseUpdate, onDeleted }:
   const [replying, setReplying] = useState(false);
   const [requestingInfo, setRequestingInfo] = useState(false);
   const [approving, setApproving] = useState(false);
-  const [rejecting, setRejecting] = useState(false);
-  const [deleting, setDeleting] = useState(false);
+ const [rejecting, setRejecting] = useState(false);
+ const [deleting, setDeleting] = useState(false);
+ const [requireFile, setRequireFile] = useState(false);
+ const [attachInfoFile, setAttachInfoFile] = useState(false);
 
   async function handleSaveAnalysis() {
     try {
@@ -99,7 +101,8 @@ export default function CaseDetailActions({ caseData, onCaseUpdate, onDeleted }:
           body: emailDraft.body,
           to: emailDraft.to,
           attachProduct: includeProduct,
-          attachReceipt: includeReceipt
+         attachReceipt: includeReceipt,
+         attachInfoFile
         }
       );
       onCaseUpdate({ ...caseData, ...updated });
@@ -201,8 +204,8 @@ export default function CaseDetailActions({ caseData, onCaseUpdate, onDeleted }:
       setRequestingInfo(true);
       const updated = await api.post<CaseRecord>(
         `/api/admin/cases/${caseData._id}/request-info`,
-        { message: requestInfoMessage }
-      );
+       { message: requestInfoMessage, requiresFile: requireFile }
+     );
       onCaseUpdate({ ...caseData, ...updated });
       toast.success("Status set to need more info");
     } catch (err: any) {
@@ -347,23 +350,31 @@ export default function CaseDetailActions({ caseData, onCaseUpdate, onDeleted }:
           />
         </div>
         <div className="mt-2 flex items-center gap-4">
-          <label className="flex items-center gap-2 text-sm text-slate-600">
-            <input
-              type="checkbox"
-              checked={includeProduct}
-              onChange={(e) => setIncludeProduct(e.target.checked)}
-            />
-            Attach product image
-          </label>
-          <label className="flex items-center gap-2 text-sm text-slate-600">
-            <input
-              type="checkbox"
-              checked={includeReceipt}
-              onChange={(e) => setIncludeReceipt(e.target.checked)}
-            />
-            Attach receipt image
-          </label>
-        </div>
+         <label className="flex items-center gap-2 text-sm text-slate-600">
+           <input
+             type="checkbox"
+             checked={includeProduct}
+             onChange={(e) => setIncludeProduct(e.target.checked)}
+           />
+           Attach product image
+         </label>
+         <label className="flex items-center gap-2 text-sm text-slate-600">
+           <input
+             type="checkbox"
+             checked={includeReceipt}
+             onChange={(e) => setIncludeReceipt(e.target.checked)}
+           />
+           Attach receipt image
+         </label>
+         <label className="flex items-center gap-2 text-sm text-slate-600">
+           <input
+             type="checkbox"
+             checked={attachInfoFile}
+             onChange={(e) => setAttachInfoFile(e.target.checked)}
+           />
+           Attach user-provided file
+         </label>
+       </div>
         <div className="mt-4 flex items-center gap-3">
           <button
             onClick={handleSaveDraft}
@@ -413,19 +424,50 @@ export default function CaseDetailActions({ caseData, onCaseUpdate, onDeleted }:
       </section>
 
       <section>
-        <h3 className="text-lg font-semibold text-slate-800">Request information</h3>
-        <textarea
+       <h3 className="text-lg font-semibold text-slate-800">Request information</h3>
+       {caseData.infoRequest && (
+         <div className="mt-3 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+           <div className="font-medium">Current request to user</div>
+           <div className="mt-1 whitespace-pre-wrap">{caseData.infoRequest.message}</div>
+           <div className="mt-1 text-xs text-amber-800">
+             Requires file: {caseData.infoRequest.requiresFile ? "Yes" : "No"} · Requested {new Date(caseData.infoRequest.requestedAt).toLocaleString()}
+           </div>
+         </div>
+       )}
+       {caseData.infoResponse && (
+         <div className="mt-3 rounded-md border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-900">
+           <div className="font-medium">User response</div>
+           {caseData.infoResponse.answer && (
+             <div className="mt-1 whitespace-pre-wrap">{caseData.infoResponse.answer}</div>
+           )}
+           {caseData.infoResponse.fileUrl && (
+             <div className="mt-2">
+               <a className="text-emerald-700 underline" href={caseData.infoResponse.fileUrl} target="_blank" rel="noreferrer">
+                 View attached file
+               </a>
+             </div>
+           )}
+           <div className="mt-1 text-xs text-emerald-800">
+             Submitted {new Date(caseData.infoResponse.submittedAt).toLocaleString()}
+           </div>
+         </div>
+       )}
+       <textarea
           rows={3}
           value={requestInfoMessage}
           onChange={(e) => setRequestInfoMessage(e.target.value)}
           placeholder="Describe what additional info is required…"
           className="mt-3 w-full rounded-md border border-slate-200 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
         />
-        <button
-          onClick={handleRequestInfo}
-          disabled={requestingInfo}
-          className="mt-3 rounded-md bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-500 disabled:cursor-not-allowed disabled:opacity-50"
-        >
+       <label className="mt-2 flex items-center gap-2 text-sm text-slate-600">
+         <input type="checkbox" checked={requireFile} onChange={(e) => setRequireFile(e.target.checked)} />
+         Require file upload from user
+       </label>
+       <button
+         onClick={handleRequestInfo}
+         disabled={requestingInfo}
+         className="mt-3 rounded-md bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-500 disabled:cursor-not-allowed disabled:opacity-50"
+       >
           {requestingInfo ? (<span className="inline-flex items-center gap-2"><Spinner className="h-4 w-4" /> Requesting…</span>) : 'Request info & mark status'}
         </button>
       </section>
