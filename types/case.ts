@@ -5,6 +5,8 @@ export type CaseStatus =
   | "APPROVED"
   | "REJECTED";
 
+export type InfoRequestStatus = "PENDING" | "ANSWERED" | "SUPERSEDED";
+
 export interface CaseEmail {
   subject: string;
   body: string;
@@ -21,6 +23,28 @@ export interface CaseResolution {
   addedAt?: string;
 }
 
+// NEW: History tracking types
+export interface InfoRequestHistoryEntry {
+  id: string;
+  message: string;
+  requiresFile: boolean;
+  requestedAt: string;
+  requestedBy: string;
+  status: InfoRequestStatus;
+}
+
+export interface InfoResponseHistoryEntry {
+  id: string;
+  requestId: string;
+  answer?: string;
+  fileUrl?: string | null;
+  fileName?: string;
+  fileType?: string;
+  submittedAt: string;
+  submittedBy: string;
+}
+
+// Legacy types - kept for backward compatibility
 export interface InfoRequest {
   message: string;
   requiresFile?: boolean;
@@ -70,6 +94,10 @@ export interface CaseRecord {
   resolution?: CaseResolution;
   status: CaseStatus;
   statusHistory?: StatusHistoryEntry[];
+  // NEW: History arrays
+  infoRequestHistory?: InfoRequestHistoryEntry[];
+  infoResponseHistory?: InfoResponseHistoryEntry[];
+  // Legacy fields - kept for backward compatibility
   infoRequest?: InfoRequest;
   infoResponse?: InfoResponse;
 }

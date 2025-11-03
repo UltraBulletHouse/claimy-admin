@@ -41,10 +41,11 @@ export default function CaseDetailActions({ caseData, onCaseUpdate, onDeleted }:
   const [replying, setReplying] = useState(false);
   const [requestingInfo, setRequestingInfo] = useState(false);
   const [approving, setApproving] = useState(false);
- const [rejecting, setRejecting] = useState(false);
- const [deleting, setDeleting] = useState(false);
- const [requireFile, setRequireFile] = useState(false);
- const [attachInfoFile, setAttachInfoFile] = useState(false);
+  const [rejecting, setRejecting] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [requireFile, setRequireFile] = useState(false);
+  const [supersedePrevious, setSupersedePrevious] = useState(false);
+  const [selectedInfoFiles, setSelectedInfoFiles] = useState<string[]>([]);
 
   async function handleSaveAnalysis() {
     try {
@@ -101,8 +102,8 @@ export default function CaseDetailActions({ caseData, onCaseUpdate, onDeleted }:
           body: emailDraft.body,
           to: emailDraft.to,
           attachProduct: includeProduct,
-         attachReceipt: includeReceipt,
-         attachInfoFile
+          attachReceipt: includeReceipt,
+          attachInfoFiles: selectedInfoFiles
         }
       );
       onCaseUpdate({ ...caseData, ...updated });
@@ -111,6 +112,14 @@ export default function CaseDetailActions({ caseData, onCaseUpdate, onDeleted }:
       toast.error(err.message ?? "Failed to send email");
     } finally {
       setSendingEmail(false);
+    }
+  }
+  
+  function handleToggleInfoFile(responseId: string, checked: boolean) {
+    if (checked) {
+      setSelectedInfoFiles(prev => [...prev, responseId]);
+    } else {
+      setSelectedInfoFiles(prev => prev.filter(id => id !== responseId));
     }
   }
 
@@ -202,14 +211,17 @@ export default function CaseDetailActions({ caseData, onCaseUpdate, onDeleted }:
   async function handleRequestInfo() {
     try {
       setRequestingInfo(true);
-      const updated = await api.post<CaseRecord>(
+      const result = await api.post<{ requestId: string; case: CaseRecord }>(
         `/api/admin/cases/${caseData._id}/request-info`,
-       { message: requestInfoMessage, requiresFile: requireFile }
-     );
-      onCaseUpdate({ ...caseData, ...updated });
-      toast.success("Status set to need more info");
+        { message: requestInfoMessage, requiresFile: requireFile, supersedePrevious }
+      );
+      onCaseUpdate({ ...caseData, ...result.case });
+      setRequestInfoMessage("");
+      setRequireFile(false);
+      setSupersedePrevious(false);
+      toast.success("Info request sent to user");
     } catch (err: any) {
-      toast.error(err.message ?? "Failed to update status");
+      toast.error(err.message ?? "Failed to send info request");
     } finally {
       setRequestingInfo(false);
     }
@@ -350,31 +362,58 @@ export default function CaseDetailActions({ caseData, onCaseUpdate, onDeleted }:
           />
         </div>
         <div className="mt-2 flex items-center gap-4">
-         <label className="flex items-center gap-2 text-sm text-slate-600">
-           <input
-             type="checkbox"
-             checked={includeProduct}
-             onChange={(e) => setIncludeProduct(e.target.checked)}
-           />
-           Attach product image
-         </label>
-         <label className="flex items-center gap-2 text-sm text-slate-600">
-           <input
-             type="checkbox"
-             checked={includeReceipt}
-             onChange={(e) => setIncludeReceipt(e.target.checked)}
-           />
-           Attach receipt image
-         </label>
-         <label className="flex items-center gap-2 text-sm text-slate-600">
-           <input
-             type="checkbox"
-             checked={attachInfoFile}
-             onChange={(e) => setAttachInfoFile(e.target.checked)}
-           />
-           Attach user-provided file
-         </label>
-       </div>
+          <label className="flex items-center gap-2 text-sm text-slate-600">
+            <input
+              type="checkbox"
+              checked={includeProduct}
+              onChange={(e) => setIncludeProduct(e.target.checked)}
+            />
+            Attach product image
+          </label>
+          <label className="flex items-center gap-2 text-sm text-slate-600">
+            <input
+              type="checkbox"
+              checked={includeReceipt}
+              onChange={(e) => setIncludeReceipt(e.target.checked)}
+            />
+            Attach receipt image
+          </label>
+        </div>
+        
+        {/* NEW: User-provided files section */}
+        {caseData.infoResponseHistory && caseData.infoResponseHistory.length > 0 && (
+          <div className="mt-4 rounded-md border border-slate-200 bg-slate-50 p-3">
+            <h4 className="mb-2 text-sm font-semibold text-slate-700">Attach user-provided files:</h4>
+            <div className="space-y-2">
+              {caseData.infoResponseHistory
+                .filter(res => res.fileUrl)
+                .map(res => (
+                  <label key={res.id} className="flex items-center gap-2 text-sm text-slate-600">
+                    <input
+                      type="checkbox"
+                      checked={selectedInfoFiles.includes(res.id)}
+                      onChange={(e) => handleToggleInfoFile(res.id, e.target.checked)}
+                    />
+                    <span className="flex-1">
+                      📄 {res.fileName || 'User file'} 
+                      <span className="ml-2 text-xs text-slate-500">
+                        (from {new Date(res.submittedAt).toLocaleDateString()})
+                      </span>
+                    </span>
+                    <a 
+                      href={res.fileUrl} 
+                      target="_blank" 
+                      rel="noreferrer"
+                      className="text-xs text-indigo-600 hover:underline"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      Preview
+                    </a>
+                  </label>
+                ))}
+            </div>
+          </div>
+        )}
         <div className="mt-4 flex items-center gap-3">
           <button
             onClick={handleSaveDraft}
@@ -424,52 +463,118 @@ export default function CaseDetailActions({ caseData, onCaseUpdate, onDeleted }:
       </section>
 
       <section>
-       <h3 className="text-lg font-semibold text-slate-800">Request information</h3>
-       {caseData.infoRequest && (
-         <div className="mt-3 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
-           <div className="font-medium">Current request to user</div>
-           <div className="mt-1 whitespace-pre-wrap">{caseData.infoRequest.message}</div>
-           <div className="mt-1 text-xs text-amber-800">
-             Requires file: {caseData.infoRequest.requiresFile ? "Yes" : "No"} · Requested {new Date(caseData.infoRequest.requestedAt).toLocaleString()}
-           </div>
-         </div>
-       )}
-       {caseData.infoResponse && (
-         <div className="mt-3 rounded-md border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-900">
-           <div className="font-medium">User response</div>
-           {caseData.infoResponse.answer && (
-             <div className="mt-1 whitespace-pre-wrap">{caseData.infoResponse.answer}</div>
-           )}
-           {caseData.infoResponse.fileUrl && (
-             <div className="mt-2">
-               <a className="text-emerald-700 underline" href={caseData.infoResponse.fileUrl} target="_blank" rel="noreferrer">
-                 View attached file
-               </a>
-             </div>
-           )}
-           <div className="mt-1 text-xs text-emerald-800">
-             Submitted {new Date(caseData.infoResponse.submittedAt).toLocaleString()}
-           </div>
-         </div>
-       )}
-       <textarea
-          rows={3}
-          value={requestInfoMessage}
-          onChange={(e) => setRequestInfoMessage(e.target.value)}
-          placeholder="Describe what additional info is required…"
-          className="mt-3 w-full rounded-md border border-slate-200 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-        />
-       <label className="mt-2 flex items-center gap-2 text-sm text-slate-600">
-         <input type="checkbox" checked={requireFile} onChange={(e) => setRequireFile(e.target.checked)} />
-         Require file upload from user
-       </label>
-       <button
-         onClick={handleRequestInfo}
-         disabled={requestingInfo}
-         className="mt-3 rounded-md bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-500 disabled:cursor-not-allowed disabled:opacity-50"
-       >
-          {requestingInfo ? (<span className="inline-flex items-center gap-2"><Spinner className="h-4 w-4" /> Requesting…</span>) : 'Request info & mark status'}
-        </button>
+        <h3 className="text-lg font-semibold text-slate-800">Information Request History</h3>
+        
+        {/* Timeline of all requests and responses */}
+        {caseData.infoRequestHistory && caseData.infoRequestHistory.length > 0 ? (
+          <div className="mt-3 space-y-3">
+            {caseData.infoRequestHistory.map((req) => {
+              const response = caseData.infoResponseHistory?.find(res => res.requestId === req.id);
+              const statusColors = {
+                PENDING: 'bg-amber-100 text-amber-800 border-amber-300',
+                ANSWERED: 'bg-emerald-100 text-emerald-800 border-emerald-300',
+                SUPERSEDED: 'bg-slate-100 text-slate-600 border-slate-300',
+              };
+              const statusColor = statusColors[req.status] || 'bg-slate-100 text-slate-600 border-slate-300';
+              
+              return (
+                <div key={req.id} className="rounded-md border border-slate-200 bg-white p-3 shadow-sm">
+                  {/* Request */}
+                  <div className="flex items-start gap-2">
+                    <div className="flex-shrink-0">
+                      <span className={`inline-block rounded px-2 py-0.5 text-xs font-medium border ${statusColor}`}>
+                        {req.status}
+                      </span>
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-sm font-medium text-slate-700">Admin Request</div>
+                      <div className="mt-1 whitespace-pre-wrap text-sm text-slate-600">{req.message}</div>
+                      <div className="mt-1 flex items-center gap-3 text-xs text-slate-500">
+                        <span>By {req.requestedBy}</span>
+                        <span>•</span>
+                        <span>{new Date(req.requestedAt).toLocaleString()}</span>
+                        {req.requiresFile && (
+                          <>
+                            <span>•</span>
+                            <span className="flex items-center gap-1">
+                              📎 File required
+                            </span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Response if exists */}
+                  {response && (
+                    <div className="mt-3 border-l-2 border-emerald-400 bg-emerald-50 pl-3 py-2">
+                      <div className="text-sm font-medium text-emerald-800">User Response</div>
+                      {response.answer && (
+                        <div className="mt-1 whitespace-pre-wrap text-sm text-emerald-900">{response.answer}</div>
+                      )}
+                      {response.fileUrl && (
+                        <div className="mt-2">
+                          <a 
+                            className="inline-flex items-center gap-1 text-sm text-emerald-700 hover:underline" 
+                            href={response.fileUrl} 
+                            target="_blank" 
+                            rel="noreferrer"
+                          >
+                            📄 {response.fileName || 'View attached file'}
+                          </a>
+                        </div>
+                      )}
+                      <div className="mt-1 text-xs text-emerald-700">
+                        Submitted by {response.submittedBy} on {new Date(response.submittedAt).toLocaleString()}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="mt-3 rounded-md border border-slate-200 bg-slate-50 p-4 text-center text-sm text-slate-500">
+            No information requests yet
+          </div>
+        )}
+        
+        {/* New request form */}
+        <div className="mt-4 rounded-md border border-indigo-200 bg-indigo-50 p-4">
+          <h4 className="text-sm font-semibold text-indigo-900">Send New Information Request</h4>
+          <textarea
+            rows={3}
+            value={requestInfoMessage}
+            onChange={(e) => setRequestInfoMessage(e.target.value)}
+            placeholder="Describe what additional info is required…"
+            className="mt-3 w-full rounded-md border border-slate-200 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+          />
+          <div className="mt-2 space-y-2">
+            <label className="flex items-center gap-2 text-sm text-slate-700">
+              <input 
+                type="checkbox" 
+                checked={requireFile} 
+                onChange={(e) => setRequireFile(e.target.checked)} 
+              />
+              Require file upload from user
+            </label>
+            <label className="flex items-center gap-2 text-sm text-slate-700">
+              <input 
+                type="checkbox" 
+                checked={supersedePrevious} 
+                onChange={(e) => setSupersedePrevious(e.target.checked)} 
+              />
+              Mark previous pending requests as superseded
+            </label>
+          </div>
+          <button
+            onClick={handleRequestInfo}
+            disabled={requestingInfo || !requestInfoMessage.trim()}
+            className="mt-3 rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {requestingInfo ? (<span className="inline-flex items-center gap-2"><Spinner className="h-4 w-4" /> Sending…</span>) : 'Send request'}
+          </button>
+        </div>
       </section>
 
       <section>
