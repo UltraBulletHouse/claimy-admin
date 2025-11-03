@@ -401,7 +401,7 @@ export default function CaseDetailActions({ caseData, onCaseUpdate, onDeleted }:
                       </span>
                     </span>
                     <a 
-                      href={res.fileUrl} 
+                      href={res.fileUrl || '#'} 
                       target="_blank" 
                       rel="noreferrer"
                       className="text-xs text-indigo-600 hover:underline"
@@ -516,7 +516,7 @@ export default function CaseDetailActions({ caseData, onCaseUpdate, onDeleted }:
                         <div className="mt-2">
                           <a 
                             className="inline-flex items-center gap-1 text-sm text-emerald-700 hover:underline" 
-                            href={response.fileUrl} 
+                            href={response.fileUrl || '#'} 
                             target="_blank" 
                             rel="noreferrer"
                           >
