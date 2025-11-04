@@ -42,8 +42,7 @@ export default function CaseDetailActions({ caseData, onCaseUpdate, onDeleted }:
   const [requestingInfo, setRequestingInfo] = useState(false);
   const [approving, setApproving] = useState(false);
   const [rejecting, setRejecting] = useState(false);
-  const [deleting, setDeleting] = useState(false);
-  const [requireFile, setRequireFile] = useState(false);
+  const [requestMode, setRequestMode] = useState<'text' | 'file' | 'yes-no'>('text');
   const [supersedePrevious, setSupersedePrevious] = useState(false);
   const [selectedInfoFiles, setSelectedInfoFiles] = useState<string[]>([]);
 
@@ -213,11 +212,11 @@ export default function CaseDetailActions({ caseData, onCaseUpdate, onDeleted }:
       setRequestingInfo(true);
       const result = await api.post<{ requestId: string; case: CaseRecord }>(
         `/api/admin/cases/${caseData._id}/request-info`,
-        { message: requestInfoMessage, requiresFile: requireFile, supersedePrevious }
+        { message: requestInfoMessage, requiresFile: requestMode === 'file', requiresYesNo: requestMode === 'yes-no', supersedePrevious }
       );
       onCaseUpdate({ ...caseData, ...result.case });
       setRequestInfoMessage("");
-      setRequireFile(false);
+      setRequestMode('text');
       setSupersedePrevious(false);
       toast.success("Info request sent to user");
     } catch (err: any) {
@@ -550,14 +549,38 @@ export default function CaseDetailActions({ caseData, onCaseUpdate, onDeleted }:
             className="mt-3 w-full rounded-md border border-slate-200 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
           />
           <div className="mt-2 space-y-2">
-            <label className="flex items-center gap-2 text-sm text-slate-700">
-              <input 
-                type="checkbox" 
-                checked={requireFile} 
-                onChange={(e) => setRequireFile(e.target.checked)} 
-              />
-              Require file upload from user
-            </label>
+            <div className="flex items-center gap-4">
+              <label className="flex items-center gap-2 text-sm text-slate-700">
+                <input
+                  type="radio"
+                  name="request-mode"
+                  value="text"
+                  checked={requestMode === 'text'}
+                  onChange={() => setRequestMode('text')}
+                />
+                Text response
+              </label>
+              <label className="flex items-center gap-2 text-sm text-slate-700">
+                <input
+                  type="radio"
+                  name="request-mode"
+                  value="file"
+                  checked={requestMode === 'file'}
+                  onChange={() => setRequestMode('file')}
+                />
+                File request
+              </label>
+              <label className="flex items-center gap-2 text-sm text-slate-700">
+                <input
+                  type="radio"
+                  name="request-mode"
+                  value="yes-no"
+                  checked={requestMode === 'yes-no'}
+                  onChange={() => setRequestMode('yes-no')}
+                />
+                Yes/No response
+              </label>
+            </div>
             <label className="flex items-center gap-2 text-sm text-slate-700">
               <input 
                 type="checkbox" 

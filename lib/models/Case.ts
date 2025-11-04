@@ -41,6 +41,33 @@ const InfoResponseSchema = new Schema(
   { _id: false }
 );
 
+const InfoRequestHistorySchema = new Schema(
+  {
+    id: { type: String, required: true },
+    message: { type: String, required: true },
+    requiresFile: { type: Boolean, default: false },
+    requiresYesNo: { type: Boolean, default: false },
+    requestedAt: { type: Date, required: true },
+    requestedBy: { type: String, required: true },
+    status: { type: String, enum: ['PENDING', 'ANSWERED', 'SUPERSEDED'], default: 'PENDING' },
+  },
+  { _id: false }
+);
+
+const InfoResponseHistorySchema = new Schema(
+  {
+    id: { type: String, required: true },
+    requestId: { type: String, required: true },
+    answer: { type: String },
+    fileUrl: { type: String, default: null },
+    fileName: { type: String },
+    fileType: { type: String },
+    submittedAt: { type: Date, required: true },
+    submittedBy: { type: String, required: true },
+  },
+  { _id: false }
+);
+
 const CaseSchema = new Schema(
   {
     userId: String,
@@ -88,7 +115,9 @@ const CaseSchema = new Schema(
     } as unknown as { type: StringConstructor; enum: string[]; default: string },
     statusHistory: [StatusHistorySchema],
     infoRequest: { type: InfoRequestSchema, default: null },
-    infoResponse: { type: InfoResponseSchema, default: null }
+    infoResponse: { type: InfoResponseSchema, default: null },
+    infoRequestHistory: { type: [InfoRequestHistorySchema], default: [] },
+    infoResponseHistory: { type: [InfoResponseHistorySchema], default: [] }
   },
   {
     timestamps: true

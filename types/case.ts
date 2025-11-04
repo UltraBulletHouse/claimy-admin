@@ -28,6 +28,7 @@ export interface InfoRequestHistoryEntry {
   id: string;
   message: string;
   requiresFile: boolean;
+  requiresYesNo: boolean;
   requestedAt: string;
   requestedBy: string;
   status: InfoRequestStatus;

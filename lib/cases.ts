@@ -193,7 +193,8 @@ export async function requestInfo(
   id: string,
   message: string,
   by: string,
-  requiresFile: boolean = false
+  requiresFile: boolean = false,
+  requiresYesNo: boolean = false
 ) {
   await connectMongo();
   const now = new Date();
@@ -210,6 +211,28 @@ export async function requestInfo(
     requestedAt: now,
   };
   (existing as any).infoResponse = null;
+
+  // Initialize history arrays if they don't exist
+  if (!existing.infoRequestHistory) {
+    (existing as any).infoRequestHistory = [];
+  }
+
+  // Generate unique request ID
+  const { randomUUID } = await import('crypto');
+  const requestId = randomUUID();
+
+  // Add new request to history
+  const newRequest = {
+    id: requestId,
+    message,
+    requiresFile,
+    requiresYesNo,
+    requestedAt: now,
+    requestedBy: by,
+    status: 'PENDING',
+  };
+  
+  (existing as any).infoRequestHistory.push(newRequest);
 
   const history = existing.statusHistory ?? [];
   history.push({
@@ -371,6 +394,25 @@ function mapCase(doc: any): CaseRecord {
           submittedAt: doc.infoResponse.submittedAt?.toISOString() ?? new Date().toISOString(),
         }
       : undefined,
+    infoRequestHistory: (doc.infoRequestHistory ?? []).map((req: any) => ({
+      id: req.id,
+      message: req.message,
+      requiresFile: !!req.requiresFile,
+      requiresYesNo: !!req.requiresYesNo,
+      requestedAt: req.requestedAt?.toISOString() ?? new Date().toISOString(),
+      requestedBy: req.requestedBy,
+      status: req.status,
+    })),
+    infoResponseHistory: (doc.infoResponseHistory ?? []).map((res: any) => ({
+      id: res.id,
+      requestId: res.requestId,
+      answer: res.answer ?? undefined,
+      fileUrl: res.fileUrl ?? null,
+      fileName: res.fileName ?? undefined,
+      fileType: res.fileType ?? undefined,
+      submittedAt: res.submittedAt?.toISOString() ?? new Date().toISOString(),
+      submittedBy: res.submittedBy,
+    })),
   };
 }
 
