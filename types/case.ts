@@ -22,6 +22,7 @@ export interface CaseResolution {
   code?: string;
   addedAt?: string;
   expiryDate?: string;
+  used?: boolean;
 }
 
 // NEW: History tracking types
