@@ -18,11 +18,16 @@ export default withAdminAuth(async function handler(
   }
   const body = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
   const code = body?.code;
+  
   if (!code) {
     res.status(400).json({ message: "Resolution code required" });
     return;
   }
-  const updated = await approveCase(id, code, req.admin?.email ?? "admin");
+  
+  // Parse expiry date if provided
+  const expiryDate = body?.expiryDate ? new Date(body.expiryDate) : undefined;
+  
+  const updated = await approveCase(id, code, req.admin?.email ?? "admin", expiryDate);
   if (!updated) {
     res.status(404).json({ message: "Case not found" });
     return;

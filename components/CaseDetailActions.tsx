@@ -29,6 +29,15 @@ export default function CaseDetailActions({ caseData, onCaseUpdate, onDeleted }:
   const [replyBody, setReplyBody] = useState("");
   const [requestInfoMessage, setRequestInfoMessage] = useState("");
   const [resolutionCode, setResolutionCode] = useState(caseData.resolution?.code ?? "");
+  const [voucherExpiryDate, setVoucherExpiryDate] = useState(() => {
+    if (caseData.resolution?.expiryDate) {
+      return caseData.resolution.expiryDate.split('T')[0];
+    }
+    // Default to 90 days from now
+    const date = new Date();
+    date.setDate(date.getDate() + 90);
+    return date.toISOString().split('T')[0];
+  });
   const [rejectNote, setRejectNote] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [confirmReject, setConfirmReject] = useState(false);
@@ -42,6 +51,7 @@ export default function CaseDetailActions({ caseData, onCaseUpdate, onDeleted }:
   const [requestingInfo, setRequestingInfo] = useState(false);
   const [approving, setApproving] = useState(false);
   const [rejecting, setRejecting] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [requestMode, setRequestMode] = useState<'text' | 'file' | 'yes-no'>('text');
   const [supersedePrevious, setSupersedePrevious] = useState(false);
   const [selectedInfoFiles, setSelectedInfoFiles] = useState<string[]>([]);
@@ -231,7 +241,10 @@ export default function CaseDetailActions({ caseData, onCaseUpdate, onDeleted }:
       setApproving(true);
       const updated = await api.post<CaseRecord>(
         `/api/admin/cases/${caseData._id}/approve`,
-        { code: resolutionCode }
+        { 
+          code: resolutionCode,
+          expiryDate: voucherExpiryDate
+        }
       );
       onCaseUpdate({ ...caseData, ...updated });
       toast.success("Case approved");
@@ -602,16 +615,39 @@ export default function CaseDetailActions({ caseData, onCaseUpdate, onDeleted }:
 
       <section>
         <h3 className="text-lg font-semibold text-slate-800">Approve resolution</h3>
-        <input
-          type="text"
-          value={resolutionCode}
-          onChange={(e) => setResolutionCode(e.target.value)}
-          placeholder="Enter resolution code"
-          className="mt-3 w-full rounded-md border border-slate-200 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-        />
+        <div className="mt-3 space-y-3">
+          <div>
+            <label htmlFor="resolutionCode" className="block text-sm font-medium text-slate-700 mb-1">
+              Voucher Code
+            </label>
+            <input
+              id="resolutionCode"
+              type="text"
+              value={resolutionCode}
+              onChange={(e) => setResolutionCode(e.target.value)}
+              placeholder="Enter resolution code"
+              className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            />
+          </div>
+          <div>
+            <label htmlFor="voucherExpiry" className="block text-sm font-medium text-slate-700 mb-1">
+              Voucher Expiry Date
+            </label>
+            <input
+              id="voucherExpiry"
+              type="date"
+              value={voucherExpiryDate}
+              onChange={(e) => setVoucherExpiryDate(e.target.value)}
+              className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            />
+            <p className="mt-1 text-xs text-slate-500">
+              Default is 90 days from today
+            </p>
+          </div>
+        </div>
         <button
           onClick={handleApprove}
-          disabled={approving}
+          disabled={approving || !resolutionCode.trim()}
           className="mt-3 rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {approving ? (<span className="inline-flex items-center gap-2"><Spinner className="h-4 w-4" /> Approving…</span>) : 'Approve & save code'}

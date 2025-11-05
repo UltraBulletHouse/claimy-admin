@@ -250,29 +250,36 @@ export async function requestInfo(
 export async function approveCase(
   id: string,
   code: string,
-  by: string
+  by: string,
+  expiryDate?: Date
 ) {
   await connectMongo();
   const now = new Date();
+  
+  // If no expiry date provided, default to 90 days from now
+  const expiry = expiryDate || new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000);
+  
   const doc = await CaseModel.findByIdAndUpdate(
     id,
     {
-      status: "APPROVED",
-      resolution: {
-        code,
-        addedAt: now
+      $set: {
+        status: "APPROVED",
+        "resolution.code": code,
+        "resolution.addedAt": now,
+        "resolution.expiryDate": expiry
       },
       $push: {
         statusHistory: {
           status: "APPROVED",
           by,
           at: now,
-          note: `Resolution code ${code}`
+          note: `Resolution code ${code} (expires: ${expiry.toISOString().split('T')[0]})`
         }
       }
     },
     { new: true }
   ).lean();
+  
   return doc ? mapCase(doc) : null;
 }
 
@@ -370,7 +377,8 @@ function mapCase(doc: any): CaseRecord {
     resolution: doc.resolution
       ? {
           code: doc.resolution.code ?? undefined,
-          addedAt: doc.resolution.addedAt?.toISOString() ?? undefined
+          addedAt: doc.resolution.addedAt?.toISOString() ?? undefined,
+          expiryDate: doc.resolution.expiryDate?.toISOString() ?? undefined
         }
       : undefined,
     status: doc.status,

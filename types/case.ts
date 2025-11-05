@@ -21,6 +21,7 @@ export interface CaseEmail {
 export interface CaseResolution {
   code?: string;
   addedAt?: string;
+  expiryDate?: string;
 }
 
 // NEW: History tracking types
