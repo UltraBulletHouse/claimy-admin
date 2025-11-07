@@ -334,9 +334,9 @@ function mapCase(doc: any): CaseRecord {
     (imagesArray && imagesArray.length > 1 ? imagesArray[1] : undefined);
 
   const productImageUrl =
-    doc.imageUrls?.product ?? doc.productImageUrl ?? productImageFromArray ?? undefined;
+    doc.imageUrls?.product ?? productImageFromArray ?? undefined;
   const receiptImageUrl =
-    doc.imageUrls?.receipt ?? doc.receiptImageUrl ?? receiptImageFromArray ?? undefined;
+    doc.imageUrls?.receipt ?? receiptImageFromArray ?? undefined;
 
   return {
     _id: doc._id.toString(),

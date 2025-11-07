@@ -32,10 +32,9 @@ export default withAdminAuth(async function handler(
 
   const attachments: Array<{ filename: string; mimeType: string; data: Buffer }> = [];
   const productImageUrl =
-    caseRecord.imageUrls?.product ?? caseRecord.productImageUrl ?? caseRecord.images?.[0];
+    caseRecord.imageUrls?.product ?? caseRecord.images?.[0];
   const receiptImageUrl =
     caseRecord.imageUrls?.receipt ??
-    caseRecord.receiptImageUrl ??
     (caseRecord.images && caseRecord.images.length > 1 ? caseRecord.images[1] : undefined);
 
   if (attachProduct && productImageUrl) {

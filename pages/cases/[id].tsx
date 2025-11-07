@@ -82,8 +82,8 @@ export default function CaseDetailPage() {
         <div className="space-y-6">
           <CaseDetailHeader caseData={caseData} />
           <CaseImages
-            productUrl={caseData.imageUrls?.product ?? caseData.productImageUrl ?? caseData.images?.[0]}
-            receiptUrl={caseData.imageUrls?.receipt ?? caseData.receiptImageUrl ?? caseData.images?.[1]}
+            productUrl={caseData.imageUrls?.product ?? caseData.images?.[0]}
+            receiptUrl={caseData.imageUrls?.receipt ?? caseData.images?.[1]}
           />
         </div>
         <div className="space-y-6">

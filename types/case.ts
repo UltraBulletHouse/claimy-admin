@@ -47,19 +47,6 @@ export interface InfoResponseHistoryEntry {
   submittedBy: string;
 }
 
-// Legacy types - kept for backward compatibility
-export interface InfoRequest {
-  message: string;
-  requiresFile?: boolean;
-  requestedAt: string;
-}
-
-export interface InfoResponse {
-  answer?: string;
-  fileUrl?: string | null;
-  submittedAt: string;
-}
-
 export interface StatusHistoryEntry {
   status: CaseStatus | string;
   by: string;
@@ -78,8 +65,6 @@ export interface CaseRecord {
   product?: string;
   description?: string;
   createdAt: string;
-  productImageUrl?: string;
-  receiptImageUrl?: string;
   images?: string[];
   imageUrls?: {
     product?: string;
@@ -100,7 +85,4 @@ export interface CaseRecord {
   // NEW: History arrays
   infoRequestHistory?: InfoRequestHistoryEntry[];
   infoResponseHistory?: InfoResponseHistoryEntry[];
-  // Legacy fields - kept for backward compatibility
-  infoRequest?: InfoRequest;
-  infoResponse?: InfoResponse;
 }
