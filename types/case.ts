@@ -85,4 +85,7 @@ export interface CaseRecord {
   // NEW: History arrays
   infoRequestHistory?: InfoRequestHistoryEntry[];
   infoResponseHistory?: InfoResponseHistoryEntry[];
+  // Legacy fields for backward compatibility
+  infoRequest?: any;
+  infoResponse?: any;
 }

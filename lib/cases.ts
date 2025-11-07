@@ -349,8 +349,6 @@ function mapCase(doc: any): CaseRecord {
     product: doc.product ?? doc.productName ?? undefined,
     description: doc.description ?? undefined,
     createdAt: doc.createdAt?.toISOString() ?? new Date().toISOString(),
-    productImageUrl,
-    receiptImageUrl,
     images: imagesArray,
     imageUrls:
       productImageUrl || receiptImageUrl
