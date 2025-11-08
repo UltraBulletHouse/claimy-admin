@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useAdminSession } from "../context/AdminSessionContext";
+import NotificationBell from "./NotificationBell";
 
 export default function NavBar() {
   const { adminSession, signOutAdmin, signIn, loading } = useAdminSession();
@@ -53,7 +54,8 @@ export default function NavBar() {
           {loading ? (
             <span className="text-sm text-slate-500">Loading…</span>
           ) : adminSession ? (
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-4">
+              <NotificationBell />
               <span className="text-sm text-slate-600">{adminSession.adminEmail}</span>
               <button
                 onClick={() => signOutAdmin()}
